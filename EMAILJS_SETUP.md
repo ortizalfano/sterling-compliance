@@ -126,3 +126,4 @@ For production use, consider upgrading to a paid plan.
 - The public key is safe to use in frontend code
 - EmailJS handles the email sending securely
 
+

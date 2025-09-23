@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import * as RadioGroupPrimitive from "@radix-ui/react-alert-dialog";
+import * as RadioGroupPrimitive from "@radix-ui/react-slot";
 import { Circle } from "lucide-react";
 
 import { cn } from "./utils";

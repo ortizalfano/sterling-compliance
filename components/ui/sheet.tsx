@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import * as SheetPrimitive from "@radix-ui/react-alert-dialog";
+import * as SheetPrimitive from "@radix-ui/react-slot";
 import { X } from "lucide-react";
 
 import { cn } from "./utils";

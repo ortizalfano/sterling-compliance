@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import * as CheckboxPrimitive from "@radix-ui/react-alert-dialog";
+import * as CheckboxPrimitive from "@radix-ui/react-slot";
 import { Check } from "lucide-react";
 
 import { cn } from "./utils";

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import * as SliderPrimitive from "@radix-ui/react-alert-dialog";
+import * as SliderPrimitive from "@radix-ui/react-slot";
 
 import { cn } from "./utils";
 
