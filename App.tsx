@@ -7,6 +7,7 @@ import { OptionsPage } from "./components/OptionsPage";
 import { PurchaseFoundPage } from "./components/PurchaseFoundPage";
 import { ChatWidget } from "./components/ChatWidget";
 import { Toaster } from "./components/ui/sonner";
+import { debugEnv } from "./src/debug";
 
 type Page = "home" | "lookup" | "options" | "help" | "purchase-found";
 
@@ -17,6 +18,9 @@ export default function App() {
 
   // Initialize dark mode from localStorage
   useEffect(() => {
+    // Debug environment variables
+    debugEnv();
+    
     const saved = localStorage.getItem("sterling-dark-mode");
     if (saved) {
       setDarkMode(JSON.parse(saved));
