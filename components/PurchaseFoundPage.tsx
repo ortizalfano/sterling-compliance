@@ -35,6 +35,10 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
   const [isProcessing, setIsProcessing] = useState(false);
   const [actionResult, setActionResult] = useState<{ success: boolean; message: string } | null>(null);
 
+  // Ensure onBack and onSearchAgain are functions
+  const safeOnBack = onBack || (() => {});
+  const safeOnSearchAgain = onSearchAgain || (() => {});
+
   // Mock data for demonstration
   const mockData = {
     email: "or***@gmail.com",
@@ -180,13 +184,15 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
     confirmText: "Confirm"
   };
 
-  return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 py-6 sm:py-8 lg:py-12">
+  // Add error boundary
+  try {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 py-6 sm:py-8 lg:py-12">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
         {/* Search again link */}
         <Button
           variant="ghost"
-          onClick={onSearchAgain}
+          onClick={safeOnSearchAgain}
           className="mb-6 sm:mb-8 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 p-0 h-auto text-sm sm:text-base"
         >
           <ArrowLeft className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -423,5 +429,25 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
         </Dialog>
       </div>
     </div>
-  );
+    );
+  } catch (error) {
+    console.error('Error in PurchaseFoundPage:', error);
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 py-6 sm:py-8 lg:py-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              Error Loading Page
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              There was an error loading this page. Please try again.
+            </p>
+            <Button onClick={safeOnSearchAgain} className="bg-amber-600 hover:bg-amber-700 text-white">
+              Go Back
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }
