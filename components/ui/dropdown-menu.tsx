@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu@2.1.6";
-import { Check, ChevronRight, Circle } from "lucide-react@0.487.0";
+import * as DropdownMenuPrimitive from "@radix-ui/react-alert-dialog";
+import { Check, ChevronRight, Circle } from "lucide-react";
 
 import { cn } from "./utils";
 

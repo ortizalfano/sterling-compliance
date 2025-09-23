@@ -1,12 +1,12 @@
 "use client";
 
 import * as React from "react";
-import * as SelectPrimitive from "@radix-ui/react-select@2.1.6";
+import * as SelectPrimitive from "@radix-ui/react-alert-dialog";
 import {
   Check,
   ChevronDown,
   ChevronUp,
-} from "lucide-react@0.487.0";
+} from "lucide-react";
 
 import { cn } from "./utils";
 

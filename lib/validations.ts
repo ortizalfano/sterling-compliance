@@ -43,8 +43,8 @@ export const transactionSearchSchema = z.object({
   
   orderNumber: z
     .string()
-    .optional()
     .max(50, 'Número de orden demasiado largo')
+    .optional()
 });
 
 // Chat message validation

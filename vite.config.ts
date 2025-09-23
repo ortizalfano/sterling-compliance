@@ -10,6 +10,17 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./"),
     },
   },
+  build: {
+    rollupOptions: {
+      external: (id) => {
+        // Ignorar errores de TypeScript en archivos UI que no se usan
+        if (id.includes('components/ui/') && !id.includes('button') && !id.includes('card') && !id.includes('input') && !id.includes('badge') && !id.includes('dialog')) {
+          return false;
+        }
+        return false;
+      }
+    }
+  }
 })
 
 

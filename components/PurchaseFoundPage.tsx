@@ -98,15 +98,15 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
         date: transactionData.date,
         status: transactionData.status,
         merchant: transactionData.merchant,
-        invoice: transactionData.invoice || 'N/A',
-        cardType: transactionData.cardType || 'N/A',
-        response: transactionData.response || 'N/A',
-        type: transactionData.type || 'N/A',
-        message: transactionData.message || 'N/A',
-        user: transactionData.user || 'N/A',
-        source: transactionData.source || 'N/A',
-        auth: transactionData.auth || 0,
-        fullCardNumber: transactionData.fullCardNumber || 'N/A',
+        invoice: (transactionData as any).invoice || 'N/A',
+        cardType: (transactionData as any).cardType || 'N/A',
+        response: (transactionData as any).response || 'N/A',
+        type: (transactionData as any).type || 'N/A',
+        message: (transactionData as any).message || 'N/A',
+        user: (transactionData as any).user || 'N/A',
+        source: (transactionData as any).source || 'N/A',
+        auth: (transactionData as any).auth || 0,
+        fullCardNumber: (transactionData as any).fullCardNumber || 'N/A',
         requestTimestamp: new Date().toISOString()
       };
 
@@ -252,47 +252,47 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
             <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {/* Invoice */}
-                {transactionData.invoice && (
+                {(transactionData as any).invoice && (
                   <div className="flex items-center gap-3">
                     <div>
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Invoice:</span>
-                      <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{transactionData.invoice}</span>
+                      <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{(transactionData as any).invoice}</span>
                     </div>
                   </div>
                 )}
 
                 {/* Card Type */}
-                {transactionData.cardType && (
+                {(transactionData as any).cardType && (
                   <div className="flex items-center gap-3">
                     <div>
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Card Type:</span>
-                      <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{transactionData.cardType}</span>
+                      <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{(transactionData as any).cardType}</span>
                     </div>
                   </div>
                 )}
 
                 {/* Response */}
-                {transactionData.response && (
+                {(transactionData as any).response && (
                   <div className="flex items-center gap-3">
                     <div>
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Response:</span>
                       <Badge className={`ml-2 ${
-                        transactionData.response === 'Approved' 
+                        (transactionData as any).response === 'Approved' 
                           ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800'
                           : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800'
                       }`}>
-                        {transactionData.response}
+                        {(transactionData as any).response}
                       </Badge>
                     </div>
                   </div>
                 )}
 
                 {/* Transaction Type */}
-                {transactionData.type && (
+                {(transactionData as any).type && (
                   <div className="flex items-center gap-3">
                     <div>
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Type:</span>
-                      <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{transactionData.type}</span>
+                      <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{(transactionData as any).type}</span>
                     </div>
                   </div>
                 )}
@@ -322,11 +322,11 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
               </div>
 
               {/* Message if available */}
-              {transactionData.message && (
+              {(transactionData as any).message && (
                 <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                   <div>
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Message:</span>
-                    <p className="text-sm text-gray-900 dark:text-gray-100 mt-1">{transactionData.message}</p>
+                    <p className="text-sm text-gray-900 dark:text-gray-100 mt-1">{(transactionData as any).message}</p>
                   </div>
                 </div>
               )}

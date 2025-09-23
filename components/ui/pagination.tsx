@@ -3,7 +3,7 @@ import {
   ChevronLeft,
   ChevronRight,
   MoreHorizontal,
-} from "lucide-react@0.487.0";
+} from "lucide-react";
 
 import { cn } from "./utils";
 import { Button, buttonVariants } from "./button";
