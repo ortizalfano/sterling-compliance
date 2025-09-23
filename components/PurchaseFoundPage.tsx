@@ -174,7 +174,11 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
     }
   };
 
-  const selectedActionContent = selectedAction ? getActionContent(selectedAction) : null;
+  const selectedActionContent = selectedAction ? getActionContent(selectedAction) : {
+    title: "Action",
+    description: "Please select an action",
+    confirmText: "Confirm"
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 py-6 sm:py-8 lg:py-12">
@@ -362,10 +366,10 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
           <DialogContent className="w-[95vw] max-w-md sm:max-w-lg md:max-w-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-4 sm:p-6 mx-2 sm:mx-0">
             <div className="pb-4 sm:pb-6">
               <DialogTitle className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 dark:text-gray-100 text-left mb-3 sm:mb-4 leading-tight">
-                {selectedActionContent?.title}
+                {selectedActionContent?.title || "Action"}
               </DialogTitle>
               <DialogDescription className="text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed text-left">
-                {selectedActionContent?.description}
+                {selectedActionContent?.description || "Please select an action"}
               </DialogDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4">
@@ -381,7 +385,7 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
                 disabled={isProcessing}
                 className="flex-1 h-11 sm:h-12 bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700 text-white font-medium rounded-lg text-sm sm:text-base order-1 sm:order-2 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isProcessing ? 'Processing...' : selectedActionContent?.confirmText}
+                {isProcessing ? 'Processing...' : (selectedActionContent?.confirmText || 'Confirm')}
               </Button>
             </div>
           </DialogContent>
