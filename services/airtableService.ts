@@ -63,9 +63,24 @@ class AirtableService {
       let filterFormula = `RIGHT({Card Number}, 4) = "${lastFourDigits}"`;
       
       if (transactionDate) {
-        const date = new Date(transactionDate);
-        const isoDate = date.toISOString().split('T')[0];
-        filterFormula += `, AND(IS_SAME({Created}, "${isoDate}", "day"))`;
+        // Parse date correctly - handle MM/DD/YYYY format
+        let date: Date;
+        if (transactionDate.includes('/')) {
+          const [month, day, year] = transactionDate.split('/');
+          date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        } else {
+          date = new Date(transactionDate);
+        }
+        
+        // Validate date
+        if (isNaN(date.getTime())) {
+          console.log('❌ Invalid date format:', transactionDate);
+          // Don't add date filter if invalid
+        } else {
+          const isoDate = date.toISOString().split('T')[0];
+          console.log('🔧 Parsed date:', { input: transactionDate, parsed: date, iso: isoDate });
+          filterFormula += `, AND(IS_SAME({Created}, "${isoDate}", "day"))`;
+        }
       }
 
       console.log('🔧 Filter formula:', filterFormula);
@@ -85,7 +100,9 @@ class AirtableService {
       console.log('🔧 Response status:', response.status, response.statusText);
 
       if (!response.ok) {
-        throw new Error(`Airtable API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.log('❌ Airtable API error details:', { status: response.status, statusText: response.statusText, body: errorText });
+        throw new Error(`Airtable API error: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const data: AirtableResponse = await response.json();
