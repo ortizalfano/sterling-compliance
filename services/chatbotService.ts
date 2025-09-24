@@ -176,9 +176,8 @@ class ChatbotService {
         };
       }
 
-      // Convert Airtable transaction to our format
-      const airtableTransaction = result.data[0];
-      const transaction: Transaction = {
+      // Convert all Airtable transactions to our format
+      const transactions: Transaction[] = result.data.map(airtableTransaction => ({
         id: airtableTransaction["Transaction ID"],
         email: airtableTransaction.Customer,
         lastFourDigits: airtableTransaction["Card Number"].slice(-4),
@@ -191,15 +190,23 @@ class ChatbotService {
         cardType: airtableTransaction["Card Type"] as any,
         createdAt: airtableTransaction.Created,
         updatedAt: airtableTransaction.Created
-      };
+      }));
 
-      // Store the full Airtable transaction for email purposes
-      context.airtableTransaction = airtableTransaction;
-
-      context.foundTransactions = [transaction];
+      // Store all transactions
+      context.foundTransactions = transactions;
       context.currentStep = 'results';
 
-      const message = `Perfect! I found your transaction:
+      let message: string;
+      
+      if (transactions.length === 1) {
+        // Single transaction
+        const transaction = transactions[0];
+        const airtableTransaction = result.data[0];
+        
+        // Store the full Airtable transaction for email purposes
+        context.airtableTransaction = airtableTransaction;
+        
+        message = `Perfect! I found your transaction:
 
 💰 **${transaction.merchant}**
 📅 Date: ${new Date(transaction.transactionDate).toLocaleDateString('en-US')}
@@ -210,6 +217,24 @@ class ChatbotService {
 📧 Response: ${airtableTransaction.Response}
 
 What would you like to do with this transaction?`;
+      } else {
+        // Multiple transactions
+        message = `Perfect! I found ${transactions.length} transactions with your card ending in ${context.lastFourDigits}:
+
+${transactions.map((transaction, index) => `
+**Transaction ${index + 1}:**
+💰 Customer: ${transaction.customerName}
+📅 Date: ${new Date(transaction.transactionDate).toLocaleDateString('en-US')}
+💳 Amount: $${transaction.amount.toFixed(2)}
+🆔 ID: ${transaction.transactionId}
+✅ Status: ${transaction.status}
+`).join('\n')}
+
+Please specify which transaction you'd like to work with by mentioning the transaction ID or customer name.`;
+
+        // Store the first transaction as default for backward compatibility
+        context.airtableTransaction = result.data[0];
+      }
 
       return {
         message,
@@ -247,7 +272,14 @@ What would you like to do with this transaction?`;
     }
 
     try {
+      // If multiple transactions, use the first one for now (could be enhanced to let user choose)
+      // TODO: Enhance to allow user to specify which transaction
       const transaction = context.foundTransactions[0];
+      
+      // If multiple transactions, inform user which one is being processed
+      if (context.foundTransactions.length > 1) {
+        const multipleTransactionMessage = `I found ${context.foundTransactions.length} transactions. I'll process the refund for the first transaction (${transaction.customerName} - $${transaction.amount.toFixed(2)}). If you need a refund for a different transaction, please specify the transaction ID.\n\n`;
+      }
       
       // Prepare email data
       const emailData = {
