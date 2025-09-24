@@ -30,6 +30,7 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
   
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showEmailPrompt, setShowEmailPrompt] = useState(false); // NEW: Separate email prompt
   const [isProcessing, setIsProcessing] = useState(false);
   const [actionResult, setActionResult] = useState<{ success: boolean; message: string } | null>(null);
   const [userEmail, setUserEmail] = useState('');
@@ -127,12 +128,22 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
     
     try {
       setSelectedAction(actionId);
-      setShowConfirmation(true);
       setActionResult(null);
+      
+      // NEW APPROACH: For refunds, show email prompt first
+      if (actionId === 'refund') {
+        console.log('🔥 REFUND ACTION - Showing email prompt');
+        setShowEmailPrompt(true);
+        setShowConfirmation(false);
+      } else {
+        console.log('🔥 NON-REFUND ACTION - Showing normal confirmation');
+        setShowConfirmation(true);
+        setShowEmailPrompt(false);
+      }
+      
       console.log('🔥 OptionsPage v2.2 - Action click handled successfully');
       console.log('🔥 OptionsPage v2.2 - Selected action set to:', actionId);
-      console.log('🔥 OptionsPage v2.2 - Show confirmation set to: true');
-      console.log('🔥 OptionsPage v2.2 - Is refund action?', actionId === 'refund');
+      console.log('🔥 OptionsPage v2.2 - Show email prompt:', actionId === 'refund');
     } catch (error) {
       console.error('Error in handleActionClick:', error);
     }
@@ -176,6 +187,25 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
   };
 
   const selectedActionContent = selectedAction ? getActionContent(selectedAction) : null;
+
+  // NEW: Handle email submission for refunds
+  const handleEmailSubmit = () => {
+    if (!userEmail.trim()) {
+      alert('Please enter your email address.');
+      return;
+    }
+    
+    if (!userEmail.includes('@')) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    
+    console.log('🔥 EMAIL SUBMITTED:', userEmail);
+    setShowEmailPrompt(false);
+    setShowConfirmation(false);
+    // Process refund immediately
+    handleConfirmAction();
+  };
 
   const handleConfirmAction = async () => {
     if (!selectedAction) return;
@@ -378,6 +408,58 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
             </Card>
           ))}
         </div>
+
+        {/* NEW: Email Prompt Dialog for Refunds */}
+        <Dialog open={showEmailPrompt} onOpenChange={setShowEmailPrompt}>
+          <DialogContent className="w-[95vw] max-w-md sm:max-w-lg md:max-w-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-4 sm:p-6 mx-2 sm:mx-0">
+            <DialogHeader>
+              <DialogTitle className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 dark:text-gray-100 leading-tight">
+                Request Refund
+              </DialogTitle>
+              <DialogDescription className="pt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed">
+                Please provide your email address so we can send you the refund confirmation. Refunds typically take 3-5 business days to appear on your statement.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="mt-4 space-y-2">
+              <Label htmlFor="user-email-refund" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Your Email Address *
+              </Label>
+              <Input
+                id="user-email-refund"
+                type="email"
+                placeholder="your.email@example.com"
+                value={userEmail}
+                onChange={(e) => setUserEmail(e.target.value)}
+                className="w-full"
+                required
+                autoFocus
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                We'll send the refund confirmation to this email address.
+              </p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-4 sm:mt-6">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowEmailPrompt(false);
+                  setUserEmail('');
+                }}
+                className="flex-1 h-11 sm:h-12 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 font-medium rounded-lg text-sm sm:text-base order-2 sm:order-1 transition-all duration-200 focus-ring"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleEmailSubmit}
+                className="flex-1 h-11 sm:h-12 bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700 text-white font-medium rounded-lg text-sm sm:text-base order-1 sm:order-2 transition-all duration-200 shadow-sm hover:shadow-md focus-ring"
+              >
+                Submit Refund Request
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Confirmation Dialog */}
         <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
