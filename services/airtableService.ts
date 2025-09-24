@@ -96,11 +96,11 @@ class AirtableService {
           const isoDate = date.toISOString().split('T')[0];
           console.log('🔧 Parsed date:', { input: transactionDate, parsed: date, iso: isoDate });
           
-          // Use date range approach (more reliable than DATESTR)
+          // Use simple date filtering approach
           const startOfDay = `${isoDate}T00:00:00.000Z`;
           const endOfDay = `${isoDate}T23:59:59.999Z`;
-          // Fix syntax - remove double AND and extra parentheses
-          dateFilter = `, AND({Created} >= "${startOfDay}", {Created} <= "${endOfDay}")`;
+          // Use simpler syntax without complex AND operations
+          dateFilter = `, {Created} >= "${startOfDay}", {Created} <= "${endOfDay}"`;
         }
       }
       
