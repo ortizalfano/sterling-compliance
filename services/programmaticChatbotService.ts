@@ -254,14 +254,39 @@ Or you can say "search" to search without a specific date.`,
       console.log('📊 Result error:', result.error);
 
       if (!result.success || !result.data || result.data.length === 0) {
-        return {
-          message: `I couldn't find any transactions with the card ending in **${state.lastFourDigits}**${state.transactionDate ? ` for the date **${state.transactionDate}**` : ''}.
+        // Debug: Try a broader search to see what's available
+        console.log('🔍 No results found, trying broader search...');
+        
+        // Try search without date filter to see if there are any transactions with these digits
+        const broaderResult = await airtableService.searchTransactionsByCard(state.lastFourDigits);
+        console.log('🔍 Broader search result:', broaderResult);
+        
+        // Run comprehensive tests
+        const testResults = await this.testSearchCombinations(state.lastFourDigits);
+        
+        let debugMessage = `I couldn't find any transactions with the card ending in **${state.lastFourDigits}**${state.transactionDate ? ` for the date **${state.transactionDate}**` : ''}.
 
-Please verify:
+**Debug Info:**
+• Search parameters: ${JSON.stringify({ lastFourDigits: state.lastFourDigits, date: state.transactionDate })}
+• Broader search (without date): ${broaderResult.success ? `Found ${broaderResult.data?.length || 0} transactions` : `Error: ${broaderResult.error}`}
+
+${testResults}`;
+
+        if (broaderResult.success && broaderResult.data && broaderResult.data.length > 0) {
+          debugMessage += `\n\n**Available transactions with these digits:**`;
+          broaderResult.data.slice(0, 3).forEach((transaction, index) => {
+            debugMessage += `\n• Transaction ${index + 1}: ${transaction.customerName || transaction.Customer} - $${transaction.amount || transaction.Amount} - ${new Date(transaction.transactionDate || transaction.Created).toLocaleDateString()}`;
+          });
+        }
+
+        debugMessage += `\n\nPlease verify:
 • The last 4 digits are correct
 • The date is correct (if provided)
 
-Would you like to try again with different information?`,
+Would you like to try again with different information?`;
+
+        return {
+          message: debugMessage,
           suggestions: ['Try different card digits', 'Try different date', 'Contact support'],
           state: { ...state, step: 'collecting_card' }
         };
@@ -560,6 +585,45 @@ Is there anything else I can help you with?`,
     // Look for 4 consecutive digits
     const match = message.match(/\b(\d{4})\b/);
     return match ? match[1] : null;
+  }
+
+  /**
+   * Test different search combinations to debug data issues
+   */
+  private async testSearchCombinations(lastFourDigits: string): Promise<string> {
+    console.log('🧪 Testing different search combinations...');
+    
+    const results = {
+      withDate: null as any,
+      withoutDate: null as any,
+      differentDigits: null as any
+    };
+    
+    try {
+      // Test with date
+      console.log('🧪 Testing with date...');
+      results.withDate = await airtableService.searchTransactionsByCard(lastFourDigits, '2025-07-06');
+      
+      // Test without date
+      console.log('🧪 Testing without date...');
+      results.withoutDate = await airtableService.searchTransactionsByCard(lastFourDigits);
+      
+      // Test with different digits (1234 -> 1235)
+      console.log('🧪 Testing with different digits...');
+      const altDigits = lastFourDigits.slice(0, 3) + (parseInt(lastFourDigits.slice(-1)) + 1).toString();
+      results.differentDigits = await airtableService.searchTransactionsByCard(altDigits);
+      
+      console.log('🧪 Test results:', results);
+      
+      return `**Search Test Results:**
+• With date: ${results.withDate.success ? `${results.withDate.data?.length || 0} found` : results.withDate.error}
+• Without date: ${results.withoutDate.success ? `${results.withoutDate.data?.length || 0} found` : results.withoutDate.error}
+• Different digits (${altDigits}): ${results.differentDigits.success ? `${results.differentDigits.data?.length || 0} found` : results.differentDigits.error}`;
+      
+    } catch (error) {
+      console.error('🧪 Test error:', error);
+      return `Test failed: ${error}`;
+    }
   }
 
   /**
