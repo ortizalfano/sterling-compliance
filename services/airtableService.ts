@@ -61,6 +61,7 @@ class AirtableService {
       // Build filter formula for Airtable - search for last 4 digits at the end of the field
       // Since the format is xxxxxxxxxxxx1234, we need to check if the field ends with the 4 digits
       let filterFormula = `RIGHT({Card Number}, 4) = "${lastFourDigits}"`;
+      let dateFilter = '';
       
       if (transactionDate) {
         // Parse date correctly - handle MM/DD/YYYY format
@@ -79,9 +80,15 @@ class AirtableService {
         } else {
           const isoDate = date.toISOString().split('T')[0];
           console.log('🔧 Parsed date:', { input: transactionDate, parsed: date, iso: isoDate });
-          filterFormula += `, AND(IS_SAME({Created}, "${isoDate}", "day"))`;
+          
+          // Use date range approach (more reliable than DATESTR)
+          const startOfDay = `${isoDate}T00:00:00.000Z`;
+          const endOfDay = `${isoDate}T23:59:59.999Z`;
+          dateFilter = `, AND(AND({Created} >= "${startOfDay}", {Created} <= "${endOfDay}"))`;
         }
       }
+      
+      filterFormula += dateFilter;
 
       console.log('🔧 Filter formula:', filterFormula);
 
