@@ -190,7 +190,7 @@ For example: 1234`,
   /**
    * Handle date collection step
    */
-  private handleDateCollection(message: string, state: ChatbotState): ChatbotResponse {
+  private async handleDateCollection(message: string, state: ChatbotState): Promise<ChatbotResponse> {
     const lowerMessage = message.toLowerCase();
     
     // Check if user wants to skip date or search now
@@ -198,27 +198,15 @@ For example: 1234`,
         lowerMessage.includes('skip') || lowerMessage.includes('no date') ||
         lowerMessage.includes('don\'t remember') || lowerMessage.includes('dont remember')) {
       
-      return {
-        message: `Great! I'll search for your transactions using the card ending in **${state.lastFourDigits}** without a specific date.
-
-Searching now...`,
-        suggestions: [],
-        state: { ...state, step: 'searching' }
-      };
+      // Execute search immediately
+      return await this.executeSearch(state);
     }
 
     // Try to extract date
     const date = this.extractDate(message);
     if (date) {
-      return {
-        message: `Perfect! I'll search for your transactions using:
-• Card ending in: **${state.lastFourDigits}**
-• Date: **${date}**
-
-Searching now...`,
-        suggestions: [],
-        state: { ...state, transactionDate: date, step: 'searching' }
-      };
+      // Execute search immediately
+      return await this.executeSearch({ ...state, transactionDate: date });
     }
 
     return {
@@ -236,9 +224,9 @@ Or you can say "search" to search without a specific date.`,
   }
 
   /**
-   * Handle searching step
+   * Execute the actual search in Airtable
    */
-  private async handleSearching(message: string, state: ChatbotState): Promise<ChatbotResponse> {
+  private async executeSearch(state: ChatbotState): Promise<ChatbotResponse> {
     if (!state.lastFourDigits) {
       return {
         message: 'I seem to have lost your card information. Let me start over.',
@@ -248,11 +236,15 @@ Or you can say "search" to search without a specific date.`,
     }
 
     try {
+      console.log('Executing search with:', { lastFourDigits: state.lastFourDigits, date: state.transactionDate });
+      
       // Search in Airtable
       const result = await airtableService.searchTransactionsByCard(
         state.lastFourDigits,
         state.transactionDate
       );
+
+      console.log('Search result:', result);
 
       if (!result.success || !result.data || result.data.length === 0) {
         return {
@@ -283,6 +275,8 @@ Would you like to try again with different information?`,
         createdAt: airtableTransaction.Created,
         updatedAt: airtableTransaction.Created
       }));
+
+      console.log('Converted transactions:', transactions);
 
       // Store transactions and airtable data
       state.foundTransactions = transactions;
@@ -341,6 +335,14 @@ Please specify which transaction you'd like to work with by mentioning:
         state: { ...state, step: 'collecting_card' }
       };
     }
+  }
+
+  /**
+   * Handle searching step - this should not be used anymore, search is executed automatically
+   */
+  private async handleSearching(message: string, state: ChatbotState): Promise<ChatbotResponse> {
+    // This should not happen anymore since search is executed automatically
+    return await this.executeSearch(state);
   }
 
   /**
