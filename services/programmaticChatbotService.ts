@@ -11,9 +11,8 @@ export interface ChatbotSession {
 }
 
 export interface ChatbotState {
-  step: 'greeting' | 'collecting_card' | 'collecting_date' | 'searching' | 'results' | 'processing';
+  step: 'greeting' | 'collecting_card' | 'searching' | 'results' | 'processing';
   lastFourDigits?: string;
-  transactionDate?: string;
   foundTransactions?: Transaction[];
   selectedTransaction?: Transaction;
   airtableTransaction?: AirtableTransaction;
@@ -98,10 +97,7 @@ class ProgrammaticChatbotService {
         return this.handleGreeting(message, state);
 
       case 'collecting_card':
-        return this.handleCardCollection(message, state);
-
-      case 'collecting_date':
-        return this.handleDateCollection(message, state);
+        return await this.handleCardCollection(message, state);
 
       case 'searching':
         return await this.handleSearching(message, state);
@@ -133,9 +129,9 @@ class ProgrammaticChatbotService {
         lowerMessage.includes('help') || lowerMessage.includes('find')) {
       
       return {
-        message: `Hello! 👋 I'm your virtual assistant for Sterling & Associates. I can help you find your transactions and resolve billing issues.
+        message: `Hello! 👋 I'm your virtual assistant for Sterling & Associates. I can help you find your transactions.
 
-To get started, I'll need the **last 4 digits of your card**. This is the only required information.
+I'll search for your transaction using the **last 4 digits of your card** - just like our main search form.
 
 Please provide the last 4 digits of the card you used for the transaction.`,
         suggestions: ['I have my card ready', 'How do I find my card?'],
@@ -156,26 +152,15 @@ Please provide the last 4 digits of the card you used for the transaction.`,
   }
 
   /**
-   * Handle card collection step
+   * Handle card collection step - now searches directly
    */
-  private handleCardCollection(message: string, state: ChatbotState): ChatbotResponse {
+  private async handleCardCollection(message: string, state: ChatbotState): Promise<ChatbotResponse> {
     const cardDigits = this.extractCardDigits(message);
     
     if (cardDigits) {
-      return {
-        message: `Perfect! I have your card ending in **${cardDigits}**.
-
-Now I can search for your transactions. If you remember the approximate date of your transaction, you can provide it to help narrow down the results (this is optional).
-
-You can provide the date in any of these formats:
-• MM/DD/YYYY (e.g., 01/15/2025)
-• Month Day, Year (e.g., January 15, 2025)
-• Just the month and year (e.g., January 2025)
-
-Or you can just say "search" or "find my transaction" to search with just the card digits.`,
-        suggestions: ['Search now', 'I remember the date', 'Skip date'],
-        state: { ...state, lastFourDigits: cardDigits, step: 'collecting_date' }
-      };
+      // Search directly without asking for date
+      console.log('🔍 Searching directly with card digits:', cardDigits);
+      return await this.executeSearch({ ...state, lastFourDigits: cardDigits });
     }
 
     return {
@@ -187,41 +172,6 @@ For example: 1234`,
     };
   }
 
-  /**
-   * Handle date collection step
-   */
-  private async handleDateCollection(message: string, state: ChatbotState): Promise<ChatbotResponse> {
-    const lowerMessage = message.toLowerCase();
-    
-    // Check if user wants to skip date or search now
-    if (lowerMessage.includes('search') || lowerMessage.includes('find') || 
-        lowerMessage.includes('skip') || lowerMessage.includes('no date') ||
-        lowerMessage.includes('don\'t remember') || lowerMessage.includes('dont remember')) {
-      
-      // Execute search immediately
-      return await this.executeSearch(state);
-    }
-
-    // Try to extract date
-    const date = this.extractDate(message);
-    if (date) {
-      // Execute search immediately
-      return await this.executeSearch({ ...state, transactionDate: date });
-    }
-
-    return {
-      message: `I understand you want to provide a date, but I couldn't parse the date format you used.
-
-Please provide the date in one of these formats:
-• MM/DD/YYYY (e.g., 01/15/2025)
-• Month Day, Year (e.g., January 15, 2025)
-• Just the month and year (e.g., January 2025)
-
-Or you can say "search" to search without a specific date.`,
-      suggestions: ['Search without date', 'Try again with date'],
-      state: { ...state, step: 'collecting_date' }
-    };
-  }
 
   /**
    * Execute the actual search in Airtable
@@ -238,14 +188,12 @@ Or you can say "search" to search without a specific date.`,
     try {
       console.log('🔍 Executing search with:', { 
         lastFourDigits: state.lastFourDigits, 
-        date: state.transactionDate,
-        searchType: 'byCard'
+        searchType: 'byCardOnly'
       });
       
-      // Search in Airtable
+      // Search in Airtable (without date filter)
       const result = await airtableService.searchTransactionsByCard(
-        state.lastFourDigits,
-        state.transactionDate
+        state.lastFourDigits
       );
 
       console.log('📊 Search result:', result);
@@ -254,46 +202,11 @@ Or you can say "search" to search without a specific date.`,
       console.log('📊 Result error:', result.error);
 
       if (!result.success || !result.data || result.data.length === 0) {
-        // Debug: Try a broader search to see what's available
-        console.log('🔍 No results found, trying broader search...');
-        
-        // Try search without date filter to see if there are any transactions with these digits
-        const broaderResult = await airtableService.searchTransactionsByCard(state.lastFourDigits);
-        console.log('🔍 Broader search result:', broaderResult);
-        
-        // Run comprehensive tests
-        const testResults = await this.testSearchCombinations(state.lastFourDigits);
-        
-        // Additional debug: Test the exact same search as the form would do
-        console.log('🧪 Testing exact form search...');
-        const formSearch = await airtableService.searchTransactionsByCard(state.lastFourDigits, state.transactionDate);
-        console.log('🧪 Form search result:', formSearch);
-        
-        let debugMessage = `I couldn't find any transactions with the card ending in **${state.lastFourDigits}**${state.transactionDate ? ` for the date **${state.transactionDate}**` : ''}.
-
-**Debug Info:**
-• Search parameters: ${JSON.stringify({ lastFourDigits: state.lastFourDigits, date: state.transactionDate })}
-• Broader search (without date): ${broaderResult.success ? `Found ${broaderResult.data?.length || 0} transactions` : `Error: ${broaderResult.error}`}
-• Form search (same as main form): ${formSearch.success ? `Found ${formSearch.data?.length || 0} transactions` : `Error: ${formSearch.error}`}
-
-${testResults}`;
-
-        if (broaderResult.success && broaderResult.data && broaderResult.data.length > 0) {
-          debugMessage += `\n\n**Available transactions with these digits:**`;
-          broaderResult.data.slice(0, 3).forEach((transaction, index) => {
-            debugMessage += `\n• Transaction ${index + 1}: ${transaction.customerName || transaction.Customer} - $${transaction.amount || transaction.Amount} - ${new Date(transaction.transactionDate || transaction.Created).toLocaleDateString()}`;
-          });
-        }
-
-        debugMessage += `\n\nPlease verify:
-• The last 4 digits are correct
-• The date is correct (if provided)
-
-Would you like to try again with different information?`;
-
         return {
-          message: debugMessage,
-          suggestions: ['Try different card digits', 'Try different date', 'Contact support'],
+          message: `I couldn't find any transactions with the card ending in **${state.lastFourDigits}**.
+
+Please verify that the last 4 digits are correct. You can try again with different digits.`,
+          suggestions: ['Try different card digits', 'Contact support'],
           state: { ...state, step: 'collecting_card' }
         };
       }
@@ -593,68 +506,7 @@ Is there anything else I can help you with?`,
     return match ? match[1] : null;
   }
 
-  /**
-   * Test different search combinations to debug data issues
-   */
-  private async testSearchCombinations(lastFourDigits: string): Promise<string> {
-    console.log('🧪 Testing different search combinations...');
-    
-    const results = {
-      withDate: null as any,
-      withoutDate: null as any,
-      differentDigits: null as any
-    };
-    
-    try {
-      // Test with date
-      console.log('🧪 Testing with date...');
-      results.withDate = await airtableService.searchTransactionsByCard(lastFourDigits, '2025-07-06');
-      
-      // Test without date
-      console.log('🧪 Testing without date...');
-      results.withoutDate = await airtableService.searchTransactionsByCard(lastFourDigits);
-      
-      // Test with different digits (1234 -> 1235)
-      console.log('🧪 Testing with different digits...');
-      const altDigits = lastFourDigits.slice(0, 3) + (parseInt(lastFourDigits.slice(-1)) + 1).toString();
-      results.differentDigits = await airtableService.searchTransactionsByCard(altDigits);
-      
-      console.log('🧪 Test results:', results);
-      
-      return `**Search Test Results:**
-• With date: ${results.withDate.success ? `${results.withDate.data?.length || 0} found` : results.withDate.error}
-• Without date: ${results.withoutDate.success ? `${results.withoutDate.data?.length || 0} found` : results.withoutDate.error}
-• Different digits (${altDigits}): ${results.differentDigits.success ? `${results.differentDigits.data?.length || 0} found` : results.differentDigits.error}`;
-      
-    } catch (error) {
-      console.error('🧪 Test error:', error);
-      return `Test failed: ${error}`;
-    }
-  }
 
-  /**
-   * Extract date from message
-   */
-  private extractDate(message: string): string | null {
-    // Try various date formats
-    const formats = [
-      // MM/DD/YYYY
-      /(\d{1,2})\/(\d{1,2})\/(\d{4})/,
-      // Month DD, YYYY
-      /(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2}),?\s+(\d{4})/i,
-      // Month YYYY
-      /(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{4})/i
-    ];
-
-    for (const format of formats) {
-      const match = message.match(format);
-      if (match) {
-        return match[0];
-      }
-    }
-
-    return null;
-  }
 
   /**
    * Clean up old sessions
