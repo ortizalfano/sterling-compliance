@@ -264,11 +264,17 @@ Or you can say "search" to search without a specific date.`,
         // Run comprehensive tests
         const testResults = await this.testSearchCombinations(state.lastFourDigits);
         
+        // Additional debug: Test the exact same search as the form would do
+        console.log('🧪 Testing exact form search...');
+        const formSearch = await airtableService.searchTransactionsByCard(state.lastFourDigits, state.transactionDate);
+        console.log('🧪 Form search result:', formSearch);
+        
         let debugMessage = `I couldn't find any transactions with the card ending in **${state.lastFourDigits}**${state.transactionDate ? ` for the date **${state.transactionDate}**` : ''}.
 
 **Debug Info:**
 • Search parameters: ${JSON.stringify({ lastFourDigits: state.lastFourDigits, date: state.transactionDate })}
 • Broader search (without date): ${broaderResult.success ? `Found ${broaderResult.data?.length || 0} transactions` : `Error: ${broaderResult.error}`}
+• Form search (same as main form): ${formSearch.success ? `Found ${formSearch.data?.length || 0} transactions` : `Error: ${formSearch.error}`}
 
 ${testResults}`;
 
