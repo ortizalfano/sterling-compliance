@@ -202,15 +202,15 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
         };
       case "cancel":
         return {
-          title: "Manage Subscription",
-          description: "You can cancel your subscription or reschedule your next payment. Changes will take effect immediately.",
-          confirmText: "Proceed to Subscription Management",
+          title: "Cancel or Reschedule Subscription",
+          description: "You can cancel your subscription or reschedule your next payment. Please submit your cancellation request and we will process it for you. You'll receive a confirmation email once your request has been processed.",
+          confirmText: "Submit Cancellation Request",
         };
       case "payment":
         return {
           title: "Update Payment Method",
-          description: "You'll be redirected to a secure page where you can update your payment information.",
-          confirmText: "Update Payment Details",
+          description: "You can update your payment method for future transactions. Please submit your payment update request and we will process it for you. You'll receive a confirmation email once your request has been processed.",
+          confirmText: "Submit Payment Update Request",
         };
       default:
         return { title: "", description: "", confirmText: "" };
