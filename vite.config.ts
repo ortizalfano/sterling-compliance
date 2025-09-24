@@ -19,7 +19,15 @@ export default defineConfig({
         }
         return false;
       }
-    }
+    },
+    // Mejorar la configuración para producción
+    minify: 'esbuild',
+    sourcemap: false,
+    target: 'es2015'
+  },
+  // Configuración para mejor manejo de errores en producción
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production')
   }
 })
 

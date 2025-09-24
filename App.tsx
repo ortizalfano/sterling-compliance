@@ -7,6 +7,7 @@ import { OptionsPage } from "./components/OptionsPage";
 import { PurchaseFoundPage } from "./components/PurchaseFoundPage";
 import { ChatWidget } from "./components/ChatWidget";
 import { Toaster } from "./components/ui/sonner";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { debugEnv } from "./debug";
 
 type Page = "home" | "lookup" | "options" | "help" | "purchase-found";
@@ -118,16 +119,20 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      <Navigation darkMode={darkMode} onToggleDarkMode={handleToggleDarkMode} />
-      
-      <main className="flex-1">
-        {renderCurrentPage()}
-      </main>
-      
-      <Footer />
-      <ChatWidget />
-      <Toaster />
-    </div>
+    <ErrorBoundary>
+      <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+        <Navigation darkMode={darkMode} onToggleDarkMode={handleToggleDarkMode} />
+        
+        <main className="flex-1">
+          <ErrorBoundary>
+            {renderCurrentPage()}
+          </ErrorBoundary>
+        </main>
+        
+        <Footer />
+        <ChatWidget />
+        <Toaster />
+      </div>
+    </ErrorBoundary>
   );
 }

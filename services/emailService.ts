@@ -176,6 +176,19 @@ Customer Support System
       }
     } catch (error) {
       console.error('Error sending email:', error);
+      
+      // Check for specific EmailJS errors
+      if (error && typeof error === 'object' && 'text' in error) {
+        const emailJSError = error as { text: string; status: number };
+        console.error('EmailJS Error:', emailJSError.text, 'Status:', emailJSError.status);
+        
+        // Return success false but don't break the UI
+        return { 
+          success: false, 
+          error: `EmailJS Error: ${emailJSError.text}` 
+        };
+      }
+      
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to send email' 

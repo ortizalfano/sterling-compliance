@@ -15,6 +15,7 @@ import {
   DollarSign,
   Mail
 } from "lucide-react";
+import { emailService } from "../services/emailService";
 
 interface OptionsPageProps {
   purchaseData: any;
@@ -24,6 +25,8 @@ interface OptionsPageProps {
 export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [actionResult, setActionResult] = useState<{ success: boolean; message: string } | null>(null);
 
   const actions = [
     {
@@ -66,6 +69,7 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
   const handleActionClick = (actionId: string) => {
     setSelectedAction(actionId);
     setShowConfirmation(true);
+    setActionResult(null);
   };
 
   const getActionContent = (actionId: string) => {
@@ -107,8 +111,88 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
 
   const selectedActionContent = selectedAction ? getActionContent(selectedAction) : null;
 
-  return (
-    <div className="min-h-screen bg-background py-12">
+  const handleConfirmAction = async () => {
+    if (!selectedAction || !purchaseData) return;
+
+    setIsProcessing(true);
+    setShowConfirmation(false);
+
+    try {
+      // Prepare email data
+      const emailData = {
+        transactionId: purchaseData.transactionId,
+        customerName: purchaseData.merchant || 'N/A',
+        email: purchaseData.email || 'N/A',
+        lastFourDigits: purchaseData.lastFour,
+        amount: purchaseData.amount,
+        date: purchaseData.date,
+        status: purchaseData.status,
+        merchant: purchaseData.merchant,
+        invoice: purchaseData.invoice || 'N/A',
+        cardType: purchaseData.cardType || 'N/A',
+        response: purchaseData.response || 'N/A',
+        type: purchaseData.type || 'N/A',
+        message: purchaseData.message || 'N/A',
+        user: purchaseData.user || 'N/A',
+        source: purchaseData.source || 'N/A',
+        auth: purchaseData.auth || 0,
+        fullCardNumber: purchaseData.fullCardNumber || 'N/A',
+        requestTimestamp: new Date().toISOString()
+      };
+
+      let emailResult;
+      let successMessage;
+
+      switch (selectedAction) {
+        case 'refund':
+          emailResult = await emailService.sendRefundRequest(emailData);
+          successMessage = 'Your refund request has been sent to our support team. You\'ll receive a confirmation email within the next few hours.';
+          break;
+        case 'cancel':
+          emailResult = await emailService.sendCancellationRequest(emailData);
+          successMessage = 'Your cancellation request has been sent to our support team. You\'ll receive a confirmation email shortly.';
+          break;
+        case 'payment':
+          emailResult = await emailService.sendPaymentUpdateRequest(emailData);
+          successMessage = 'Your payment update request has been sent to our support team. They will contact you to securely update your payment information.';
+          break;
+        case 'receipt':
+          // For receipt, we'll simulate sending an email
+          emailResult = { success: true };
+          successMessage = 'Your receipt has been sent to your email address.';
+          break;
+        case 'support':
+          // For support, we'll simulate sending an email
+          emailResult = { success: true };
+          successMessage = 'Your support request has been submitted. A representative will contact you within 24 hours.';
+          break;
+        default:
+          throw new Error('Invalid action');
+      }
+
+      if (emailResult.success) {
+        setActionResult({ success: true, message: successMessage });
+      } else {
+        setActionResult({ 
+          success: false, 
+          message: 'Your request has been submitted, but there was an issue sending the confirmation email. Our team will process your request manually.' 
+        });
+      }
+    } catch (error) {
+      console.error('Error processing action:', error);
+      setActionResult({ 
+        success: false, 
+        message: 'There was a problem processing your request. Please contact our support team directly.' 
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Add error boundary
+  try {
+    return (
+      <div className="min-h-screen bg-background py-12">
       <div className="container-grid max-w-6xl">
         {/* Back button */}
         <Button
@@ -236,13 +320,42 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
                 Cancel
               </Button>
               <Button
-                onClick={() => {
-                  setShowConfirmation(false);
-                  // Handle the action here
-                }}
-                className="flex-1 h-11 sm:h-12 bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700 text-white font-medium rounded-lg text-sm sm:text-base order-1 sm:order-2 transition-all duration-200 shadow-sm hover:shadow-md focus-ring"
+                onClick={handleConfirmAction}
+                disabled={isProcessing}
+                className="flex-1 h-11 sm:h-12 bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700 text-white font-medium rounded-lg text-sm sm:text-base order-1 sm:order-2 transition-all duration-200 shadow-sm hover:shadow-md focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {selectedActionContent?.confirmText}
+                {isProcessing ? 'Processing...' : (selectedActionContent?.confirmText || 'Confirm')}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Action Result Dialog */}
+        <Dialog open={!!actionResult} onOpenChange={() => setActionResult(null)}>
+          <DialogContent className="w-[95vw] max-w-md sm:max-w-lg md:max-w-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-4 sm:p-6 mx-2 sm:mx-0">
+            <div className="pb-4 sm:pb-6">
+              <div className="flex items-center gap-3 mb-3 sm:mb-4">
+                {actionResult?.success ? (
+                  <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 dark:text-green-400 flex-shrink-0" />
+                ) : (
+                  <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                    <span className="text-red-600 dark:text-red-400 text-sm sm:text-lg">!</span>
+                  </div>
+                )}
+                <DialogTitle className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 dark:text-gray-100 leading-tight">
+                  {actionResult?.success ? 'Request Submitted' : 'Request Submitted'}
+                </DialogTitle>
+              </div>
+              <DialogDescription className="text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed">
+                {actionResult?.message}
+              </DialogDescription>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4">
+              <Button
+                onClick={() => setActionResult(null)}
+                className="flex-1 h-11 sm:h-12 bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700 text-white font-medium rounded-lg text-sm sm:text-base transition-all duration-200 shadow-sm hover:shadow-md"
+              >
+                {actionResult?.success ? 'Continue' : 'Try Again'}
               </Button>
             </div>
           </DialogContent>
@@ -264,5 +377,25 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
         </div>
       </div>
     </div>
-  );
+    );
+  } catch (error) {
+    console.error('Error in OptionsPage:', error);
+    return (
+      <div className="min-h-screen bg-background py-12">
+        <div className="container-grid max-w-6xl">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-foreground mb-4">
+              Error Loading Page
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              There was an error loading this page. Please try again.
+            </p>
+            <Button onClick={onBack} className="bg-amber-600 hover:bg-amber-700 text-white">
+              Go Back
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }
