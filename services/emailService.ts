@@ -163,7 +163,7 @@ Customer Support System
   /**
    * Send email using EmailJS or simulation
    */
-  private async sendEmail(subject: string, content: string, templateParams: any = {}): Promise<{ success: boolean; error?: string }> {
+  private async sendEmail(subject: string, content: string, templateParams: any = {}, templateId?: string): Promise<{ success: boolean; error?: string }> {
     try {
       if (this.isConfigured) {
         // Send real email using EmailJS
@@ -176,7 +176,7 @@ Customer Support System
 
         const result = await emailjs.send(
           this.serviceId,
-          this.templateId,
+          templateId || this.templateId,
           templateParamsWithDefaults,
           this.publicKey
         );
@@ -260,7 +260,7 @@ Customer Support System
         request_type: 'Cancellation Request'
       };
 
-      return await this.sendEmail(subject, emailContent, templateParams);
+      return await this.sendEmail(subject, emailContent, templateParams, 'template_cancellation');
     } catch (error) {
       console.error('Error sending cancellation request email:', error);
       return { 
@@ -365,7 +365,7 @@ Customer Support System
         request_type: 'Payment Update Request'
       };
 
-      return await this.sendEmail(subject, emailContent, templateParams);
+      return await this.sendEmail(subject, emailContent, templateParams, 'template_cancellation');
     } catch (error) {
       console.error('Error sending payment update request email:', error);
       return { 
