@@ -99,7 +99,8 @@ class AirtableService {
           // Use date range approach (more reliable than DATESTR)
           const startOfDay = `${isoDate}T00:00:00.000Z`;
           const endOfDay = `${isoDate}T23:59:59.999Z`;
-          dateFilter = `, AND(AND({Created} >= "${startOfDay}", {Created} <= "${endOfDay}"))`;
+          // Fix syntax - remove double AND and extra parentheses
+          dateFilter = `, AND({Created} >= "${startOfDay}", {Created} <= "${endOfDay}")`;
         }
       }
       
