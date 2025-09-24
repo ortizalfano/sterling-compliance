@@ -28,6 +28,11 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [actionResult, setActionResult] = useState<{ success: boolean; message: string } | null>(null);
 
+  // Debug logging
+  console.log('OptionsPage render - purchaseData:', purchaseData);
+  console.log('OptionsPage render - selectedAction:', selectedAction);
+  console.log('OptionsPage render - showConfirmation:', showConfirmation);
+
   // Validar que purchaseData existe y tiene las propiedades necesarias
   if (!purchaseData) {
     return (
@@ -108,9 +113,17 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
   ];
 
   const handleActionClick = (actionId: string) => {
-    setSelectedAction(actionId);
-    setShowConfirmation(true);
-    setActionResult(null);
+    console.log('handleActionClick called with actionId:', actionId);
+    console.log('Current safePurchaseData:', safePurchaseData);
+    
+    try {
+      setSelectedAction(actionId);
+      setShowConfirmation(true);
+      setActionResult(null);
+      console.log('Action click handled successfully');
+    } catch (error) {
+      console.error('Error in handleActionClick:', error);
+    }
   };
 
   const getActionContent = (actionId: string) => {

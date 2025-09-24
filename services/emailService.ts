@@ -46,34 +46,45 @@ class EmailService {
    * Send refund request email
    */
   async sendRefundRequest(refundData: RefundRequest): Promise<{ success: boolean; error?: string }> {
+    console.log('sendRefundRequest called with:', refundData);
+    
     try {
+      // Validate required fields
+      if (!refundData || !refundData.transactionId) {
+        throw new Error('Invalid refund data: missing transactionId');
+      }
+
       const emailContent = this.generateRefundEmailContent(refundData);
       const subject = `Refund Request - Transaction ID: ${refundData.transactionId}`;
       
       // Prepare template parameters for EmailJS
       const templateParams = {
-        transaction_id: refundData.transactionId,
-        customer_name: refundData.customerName,
-        customer_email: refundData.email,
-        card_last_four: refundData.lastFourDigits,
-        amount: refundData.amount,
-        transaction_date: refundData.date,
-        status: refundData.status,
-        merchant: refundData.merchant,
-        invoice: refundData.invoice,
-        card_type: refundData.cardType,
-        response: refundData.response,
-        type: refundData.type,
-        message: refundData.message,
-        user: refundData.user,
-        source: refundData.source,
-        auth: refundData.auth,
-        full_card_number: refundData.fullCardNumber,
-        request_timestamp: refundData.requestTimestamp,
+        transaction_id: refundData.transactionId || 'N/A',
+        customer_name: refundData.customerName || 'N/A',
+        customer_email: refundData.email || 'N/A',
+        card_last_four: refundData.lastFourDigits || 'N/A',
+        amount: refundData.amount || 'N/A',
+        transaction_date: refundData.date || 'N/A',
+        status: refundData.status || 'N/A',
+        merchant: refundData.merchant || 'N/A',
+        invoice: refundData.invoice || 'N/A',
+        card_type: refundData.cardType || 'N/A',
+        response: refundData.response || 'N/A',
+        type: refundData.type || 'N/A',
+        message: refundData.message || 'N/A',
+        user: refundData.user || 'N/A',
+        source: refundData.source || 'N/A',
+        auth: refundData.auth || 0,
+        full_card_number: refundData.fullCardNumber || 'N/A',
+        request_timestamp: refundData.requestTimestamp || new Date().toISOString(),
         request_type: 'Refund Request'
       };
 
-      return await this.sendEmail(subject, emailContent, templateParams);
+      console.log('Sending email with template params:', templateParams);
+      const result = await this.sendEmail(subject, emailContent, templateParams);
+      console.log('Email send result:', result);
+      
+      return result;
     } catch (error) {
       console.error('Error sending refund request email:', error);
       return { 

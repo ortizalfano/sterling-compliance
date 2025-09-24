@@ -119,20 +119,16 @@ export default function App() {
   };
 
   return (
-    <ErrorBoundary>
-      <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-        <Navigation darkMode={darkMode} onToggleDarkMode={handleToggleDarkMode} />
-        
-        <main className="flex-1">
-          <ErrorBoundary>
-            {renderCurrentPage()}
-          </ErrorBoundary>
-        </main>
-        
-        <Footer />
-        <ChatWidget />
-        <Toaster />
-      </div>
-    </ErrorBoundary>
+    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      <Navigation darkMode={darkMode} onToggleDarkMode={handleToggleDarkMode} />
+      
+      <main className="flex-1">
+        {renderCurrentPage()}
+      </main>
+      
+      <Footer />
+      <ChatWidget />
+      <Toaster />
+    </div>
   );
 }
