@@ -132,7 +132,8 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
       
       // NEW APPROACH: For refunds, show email prompt first
       if (actionId === 'refund') {
-        console.log('🔥 REFUND ACTION - Showing email prompt');
+        console.log('🔥🔥🔥 REFUND ACTION - Showing NEW email prompt');
+        console.log('🔥🔥🔥 Setting showEmailPrompt to TRUE');
         setShowEmailPrompt(true);
         setShowConfirmation(false);
       } else {
@@ -410,7 +411,10 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
         </div>
 
         {/* NEW: Email Prompt Dialog for Refunds */}
-        <Dialog open={showEmailPrompt} onOpenChange={setShowEmailPrompt}>
+        <Dialog open={showEmailPrompt} onOpenChange={(open) => {
+          console.log('🚨🚨🚨 NEW EMAIL POPUP OPENED:', open);
+          setShowEmailPrompt(open);
+        }}>
           <DialogContent className="w-[95vw] max-w-md sm:max-w-lg md:max-w-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-4 sm:p-6 mx-2 sm:mx-0">
             <DialogHeader>
               <DialogTitle className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 dark:text-gray-100 leading-tight">
