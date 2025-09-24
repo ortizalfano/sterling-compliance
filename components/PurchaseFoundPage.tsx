@@ -221,11 +221,11 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              {/* Email */}
+              {/* Customer */}
               <div className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
                 <div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Email:</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Customer:</span>
                   <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{transactionData.email}</span>
                 </div>
               </div>
@@ -261,16 +261,6 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
             {/* Additional transaction details */}
             <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                {/* Invoice */}
-                {(transactionData as any).invoice && (
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Invoice:</span>
-                      <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{(transactionData as any).invoice}</span>
-                    </div>
-                  </div>
-                )}
-
                 {/* Card Type */}
                 {(transactionData as any).cardType && (
                   <div className="flex items-center gap-3">
@@ -308,22 +298,18 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
                 )}
               </div>
 
-              {/* Merchant and Transaction ID row */}
+              {/* Merchant and Status row */}
               <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <Building className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
                     <div>
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Merchant:</span>
-                      <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{transactionData.merchant}</span>
+                      <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">Sterling & Associates</span>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-3">
-                    <div>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Transaction ID:</span>
-                      <span className="text-sm text-gray-900 dark:text-gray-100 font-mono ml-2">{transactionData.transactionId}</span>
-                    </div>
                     <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800">
                       {transactionData.status}
                     </Badge>
