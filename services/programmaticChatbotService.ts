@@ -236,7 +236,11 @@ Or you can say "search" to search without a specific date.`,
     }
 
     try {
-      console.log('Executing search with:', { lastFourDigits: state.lastFourDigits, date: state.transactionDate });
+      console.log('🔍 Executing search with:', { 
+        lastFourDigits: state.lastFourDigits, 
+        date: state.transactionDate,
+        searchType: 'byCard'
+      });
       
       // Search in Airtable
       const result = await airtableService.searchTransactionsByCard(
@@ -244,7 +248,10 @@ Or you can say "search" to search without a specific date.`,
         state.transactionDate
       );
 
-      console.log('Search result:', result);
+      console.log('📊 Search result:', result);
+      console.log('📊 Result success:', result.success);
+      console.log('📊 Result data length:', result.data?.length || 0);
+      console.log('📊 Result error:', result.error);
 
       if (!result.success || !result.data || result.data.length === 0) {
         return {

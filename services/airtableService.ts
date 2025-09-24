@@ -43,7 +43,15 @@ class AirtableService {
    */
   async searchTransactionsByCard(lastFourDigits: string, transactionDate?: string): Promise<ApiResponse<AirtableTransaction[]>> {
     try {
+      console.log('🔧 AirtableService.searchTransactionsByCard called with:', { lastFourDigits, transactionDate });
+      
       if (!this.config.apiKey || !this.config.baseId) {
+        console.log('❌ Airtable configuration missing:', { 
+          hasApiKey: !!this.config.apiKey, 
+          hasBaseId: !!this.config.baseId,
+          apiKey: this.config.apiKey ? '***' + this.config.apiKey.slice(-4) : 'missing',
+          baseId: this.config.baseId ? '***' + this.config.baseId.slice(-4) : 'missing'
+        });
         return {
           success: false,
           error: 'Airtable configuration missing. Please check your environment variables.'
@@ -60,14 +68,21 @@ class AirtableService {
         filterFormula += `, AND(IS_SAME({Created}, "${isoDate}", "day"))`;
       }
 
+      console.log('🔧 Filter formula:', filterFormula);
+
       const params = new URLSearchParams({
         filterByFormula: filterFormula,
         maxRecords: '100'
       });
 
-      const response = await fetch(`${this.baseUrl}?${params}`, {
+      const url = `${this.baseUrl}?${params}`;
+      console.log('🔧 Request URL:', url);
+
+      const response = await fetch(url, {
         headers: this.getHeaders()
       });
+
+      console.log('🔧 Response status:', response.status, response.statusText);
 
       if (!response.ok) {
         throw new Error(`Airtable API error: ${response.status} ${response.statusText}`);
