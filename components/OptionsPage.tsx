@@ -37,6 +37,7 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
   console.log('OptionsPage render - showConfirmation:', showConfirmation);
   console.log('OptionsPage render - userEmail:', userEmail);
   console.log('OptionsPage render - should show email field:', selectedAction === 'refund');
+  console.log('OptionsPage render - selectedActionContent:', selectedActionContent);
 
   // Validar que purchaseData existe y tiene las propiedades necesarias
   if (!purchaseData) {
@@ -387,8 +388,8 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
               </DialogDescription>
             </DialogHeader>
             
-            {/* Email input for refund requests */}
-            {selectedAction === 'refund' && (
+            {/* Email input for refund requests - ALWAYS show for refunds */}
+            {selectedAction === 'refund' ? (
               <div className="mt-4 space-y-2">
                 <Label htmlFor="user-email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Your Email Address *
@@ -405,6 +406,13 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Please provide your email address so we can send you the refund confirmation.
                 </p>
+              </div>
+            ) : null}
+            
+            {/* Debug info - remove in production */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-2 p-2 bg-yellow-100 text-xs">
+                Debug: selectedAction = "{selectedAction}", showEmailField = {String(selectedAction === 'refund')}
               </div>
             )}
             
