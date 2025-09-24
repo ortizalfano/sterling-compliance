@@ -44,6 +44,7 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
   const mockData = [
     {
       email: "or***@gmail.com",
+      customerName: "Eloise Carlisle",
       lastFour: "1234",
       amount: "$49.99",
       date: "08/09/2025",
@@ -57,6 +58,7 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
     },
     {
       email: "or***@gmail.com",
+      customerName: "Eloise Carlisle",
       lastFour: "1234",
       amount: "$29.99",
       date: "07/09/2025",
@@ -245,7 +247,7 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
         </div>
 
         {/* Transaction Summary Card */}
-        <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm max-w-3xl mx-auto mb-6 sm:mb-8">
+        <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm max-w-4xl mx-auto mb-6 sm:mb-8">
           <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
             <CardTitle className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
               {isMultipleTransactions ? `Found ${transactions.length} Transactions` : 'Transaction Summary'}
@@ -263,7 +265,7 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
                 {transactions.map((transaction, index) => (
                   <div 
                     key={transaction.transactionId}
-                    className={`border rounded-lg p-4 cursor-pointer transition-all duration-200 ${
+                    className={`border rounded-lg p-3 sm:p-4 cursor-pointer transition-all duration-200 ${
                       selectedTransactionId === transaction.transactionId
                         ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-400'
                         : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
@@ -298,22 +300,28 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
                       </div>
                     </div>
 
+                    {/* Customer Name */}
+                    <div className="mb-3">
+                      <span className="text-gray-500 dark:text-gray-400 text-sm">Customer:</span>
+                      <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{(transaction as any).customerName || transaction.email}</p>
+                    </div>
+
                     {/* Transaction details */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                       <div>
-                        <span className="text-gray-500 dark:text-gray-400">Amount:</span>
+                        <span className="text-gray-500 dark:text-gray-400 block text-xs">Amount</span>
                         <p className="font-medium text-gray-900 dark:text-gray-100">{transaction.amount}</p>
                       </div>
                       <div>
-                        <span className="text-gray-500 dark:text-gray-400">Date:</span>
+                        <span className="text-gray-500 dark:text-gray-400 block text-xs">Date</span>
                         <p className="font-medium text-gray-900 dark:text-gray-100">{transaction.date}</p>
                       </div>
                       <div>
-                        <span className="text-gray-500 dark:text-gray-400">Card:</span>
+                        <span className="text-gray-500 dark:text-gray-400 block text-xs">Card</span>
                         <p className="font-medium text-gray-900 dark:text-gray-100">•••• {transaction.lastFour}</p>
                       </div>
                       <div>
-                        <span className="text-gray-500 dark:text-gray-400">Type:</span>
+                        <span className="text-gray-500 dark:text-gray-400 block text-xs">Type</span>
                         <p className="font-medium text-gray-900 dark:text-gray-100">{(transaction as any).type || 'Credit Card Sale'}</p>
                       </div>
                     </div>
@@ -328,7 +336,7 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
                   <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
                   <div>
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Customer:</span>
-                    <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{selectedTransaction.email}</span>
+                    <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{(selectedTransaction as any).customerName || selectedTransaction.email}</span>
                   </div>
                 </div>
 
@@ -436,7 +444,7 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
         </Card>
 
         {/* Action Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
           {actionCards.map((action, index) => (
             <Card 
               key={action.id} 
@@ -445,10 +453,10 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
             >
               <CardContent className="p-4 sm:p-6">
                 <div className="flex flex-col items-center text-center space-y-3 sm:space-y-4">
-                  <div className={`h-12 w-12 sm:h-16 sm:w-16 rounded-xl ${action.bgColor} flex items-center justify-center`}>
-                    <action.icon className={`h-6 w-6 sm:h-8 sm:w-8 ${action.color}`} />
+                  <div className={`h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 rounded-xl ${action.bgColor} flex items-center justify-center`}>
+                    <action.icon className={`h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 ${action.color}`} />
                   </div>
-                  <div>
+                  <div className="w-full">
                     <h3 className="font-semibold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2 text-gray-900 dark:text-gray-100 leading-tight">{action.title}</h3>
                     <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{action.description}</p>
                   </div>
