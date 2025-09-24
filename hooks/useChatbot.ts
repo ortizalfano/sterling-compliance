@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { chatbotService, ChatbotSession } from '../services/chatbotService';
-import { ChatResponse } from '../services/geminiService';
+import { programmaticChatbotService, ChatbotSession, ChatbotResponse } from '../services/programmaticChatbotService';
 
 export interface ChatMessage {
   id: string;
@@ -30,7 +29,7 @@ export function useChatbot(): UseChatbotReturn {
   // Initialize chatbot session
   useEffect(() => {
     if (!session) {
-      const newSession = chatbotService.startSession();
+      const newSession = programmaticChatbotService.startSession();
       setSession(newSession);
       
       // Add welcome message
@@ -67,13 +66,13 @@ export function useChatbot(): UseChatbotReturn {
     setIsTyping(true);
 
     try {
-      // Process message with chatbot
-      console.log('Processing message with chatbot service...');
-      const response: ChatResponse = await chatbotService.processMessage(session.id, message);
-      console.log('Chatbot response:', response);
+      // Process message with programmatic chatbot
+      console.log('Processing message with programmatic chatbot service...');
+      const response: ChatbotResponse = await programmaticChatbotService.processMessage(session.id, message);
+      console.log('Programmatic chatbot response:', response);
       
       // Update session
-      setSession(prev => prev ? { ...prev, context: response.context } : null);
+      setSession(prev => prev ? { ...prev, state: response.state } : null);
 
       // Create assistant message
       const assistantMessage: ChatMessage = {
@@ -109,7 +108,7 @@ export function useChatbot(): UseChatbotReturn {
 
   // Start new session
   const startNewSession = useCallback(() => {
-    const newSession = chatbotService.startSession();
+    const newSession = programmaticChatbotService.startSession();
     setSession(newSession);
     
     const welcomeMessage: ChatMessage = {
