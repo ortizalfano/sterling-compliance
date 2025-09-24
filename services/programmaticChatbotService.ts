@@ -103,7 +103,7 @@ class ProgrammaticChatbotService {
         return await this.handleSearching(message, state);
 
       case 'results':
-        return this.handleResults(message, state);
+        return await this.handleResults(message, state);
 
       case 'processing':
         return await this.handleProcessing(message, state);
@@ -299,7 +299,7 @@ Please specify which transaction you'd like to work with by mentioning:
   /**
    * Handle results step
    */
-  private handleResults(message: string, state: ChatbotState): ChatbotResponse {
+  private async handleResults(message: string, state: ChatbotState): Promise<ChatbotResponse> {
     if (!state.foundTransactions || state.foundTransactions.length === 0) {
       return {
         message: 'I seem to have lost your transaction information. Let me start over.',
@@ -310,29 +310,20 @@ Please specify which transaction you'd like to work with by mentioning:
 
     const lowerMessage = message.toLowerCase();
 
-    // Check for action requests
+    // Check for action requests - execute immediately
     if (lowerMessage.includes('refund') || lowerMessage.includes('money back')) {
-      return {
-        message: 'I\'ll process your refund request now.',
-        suggestions: [],
-        state: { ...state, step: 'processing' }
-      };
+      // Execute refund processing immediately
+      return await this.handleProcessing('refund', state);
     }
 
     if (lowerMessage.includes('cancel') || lowerMessage.includes('subscription')) {
-      return {
-        message: 'I\'ll process your cancellation request now.',
-        suggestions: [],
-        state: { ...state, step: 'processing' }
-      };
+      // Execute cancellation processing immediately
+      return await this.handleProcessing('cancel', state);
     }
 
     if (lowerMessage.includes('update') || lowerMessage.includes('payment method')) {
-      return {
-        message: 'I\'ll process your payment method update request now.',
-        suggestions: [],
-        state: { ...state, step: 'processing' }
-      };
+      // Execute payment update processing immediately
+      return await this.handleProcessing('update', state);
     }
 
     // Handle transaction selection for multiple transactions
@@ -366,7 +357,7 @@ What would you like to do with this transaction?`,
   /**
    * Handle processing step
    */
-  private async handleProcessing(message: string, state: ChatbotState): Promise<ChatbotResponse> {
+  private async handleProcessing(actionType: string, state: ChatbotState): Promise<ChatbotResponse> {
     if (!state.selectedTransaction && state.foundTransactions) {
       state.selectedTransaction = state.foundTransactions[0];
     }
@@ -379,10 +370,11 @@ What would you like to do with this transaction?`,
       };
     }
 
-    const lowerMessage = message.toLowerCase();
     const transaction = state.selectedTransaction;
 
     try {
+      console.log('🔧 Processing action:', actionType, 'for transaction:', transaction.transactionId);
+      
       // Prepare email data
       const emailData = {
         transactionId: transaction.transactionId,
@@ -406,17 +398,20 @@ What would you like to do with this transaction?`,
       };
 
       let emailResult;
-      let actionType;
+      let actionDescription;
 
-      if (lowerMessage.includes('refund') || lowerMessage.includes('money back')) {
+      if (actionType === 'refund') {
+        console.log('📧 Sending refund request email...');
         emailResult = await emailService.sendRefundRequest(emailData);
-        actionType = 'refund';
-      } else if (lowerMessage.includes('cancel') || lowerMessage.includes('subscription')) {
+        actionDescription = 'refund';
+      } else if (actionType === 'cancel') {
+        console.log('📧 Sending cancellation request email...');
         emailResult = await emailService.sendCancellationRequest(emailData);
-        actionType = 'cancellation';
-      } else if (lowerMessage.includes('update') || lowerMessage.includes('payment method')) {
+        actionDescription = 'cancellation';
+      } else if (actionType === 'update') {
+        console.log('📧 Sending payment update request email...');
         emailResult = await emailService.sendPaymentUpdateRequest(emailData);
-        actionType = 'payment update';
+        actionDescription = 'payment update';
       } else {
         return {
           message: 'I\'m not sure what action you want to take. Please specify if you want a refund, cancellation, or payment method update.',
@@ -425,14 +420,16 @@ What would you like to do with this transaction?`,
         };
       }
 
+      console.log('📧 Email result:', emailResult);
+
       if (emailResult.success) {
         return {
-          message: `✅ **${actionType.charAt(0).toUpperCase() + actionType.slice(1)} Request Processed**
+          message: `✅ **${actionDescription.charAt(0).toUpperCase() + actionDescription.slice(1)} Request Processed**
 
-Your ${actionType} request for transaction ${transaction.transactionId} has been processed and sent to our support team.
+Your ${actionDescription} request for transaction ${transaction.transactionId} has been processed and sent to our support team.
 
 📧 You'll receive a confirmation email within the next few hours
-⏱️ The ${actionType} will be processed in 3-5 business days
+⏱️ The ${actionDescription} will be processed in 3-5 business days
 💳 It will be applied to the card ending in ${transaction.lastFourDigits}
 
 Is there anything else I can help you with?`,
@@ -441,13 +438,13 @@ Is there anything else I can help you with?`,
         };
       } else {
         return {
-          message: `⚠️ **${actionType.charAt(0).toUpperCase() + actionType.slice(1)} Request Submitted**
+          message: `⚠️ **${actionDescription.charAt(0).toUpperCase() + actionDescription.slice(1)} Request Submitted**
 
-Your ${actionType} request for transaction ${transaction.transactionId} has been submitted, but there was an issue sending the confirmation email.
+Your ${actionDescription} request for transaction ${transaction.transactionId} has been submitted, but there was an issue sending the confirmation email.
 
 📧 Our team will process your request manually
 ⏱️ You should receive confirmation within 24 hours
-💳 The ${actionType} will be applied to the card ending in ${transaction.lastFourDigits}
+💳 The ${actionDescription} will be applied to the card ending in ${transaction.lastFourDigits}
 
 Is there anything else I can help you with?`,
           suggestions: ['Check status', 'Another inquiry', 'End conversation'],
