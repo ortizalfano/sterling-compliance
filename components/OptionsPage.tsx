@@ -32,12 +32,12 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
   const [userEmail, setUserEmail] = useState('');
 
   // Debug logging
-  console.log('OptionsPage render - purchaseData:', purchaseData);
-  console.log('OptionsPage render - selectedAction:', selectedAction);
-  console.log('OptionsPage render - showConfirmation:', showConfirmation);
-  console.log('OptionsPage render - userEmail:', userEmail);
-  console.log('OptionsPage render - should show email field:', selectedAction === 'refund');
-  console.log('OptionsPage render - selectedActionContent:', selectedActionContent);
+  console.log('🔧 OptionsPage v2.2 render - purchaseData:', purchaseData);
+  console.log('🔧 OptionsPage v2.2 render - selectedAction:', selectedAction);
+  console.log('🔧 OptionsPage v2.2 render - showConfirmation:', showConfirmation);
+  console.log('🔧 OptionsPage v2.2 render - userEmail:', userEmail);
+  console.log('🔧 OptionsPage v2.2 render - should show email field:', selectedAction === 'refund');
+  console.log('🔧 OptionsPage v2.2 render - selectedActionContent:', selectedActionContent);
 
   // Validar que purchaseData existe y tiene las propiedades necesarias
   if (!purchaseData) {
@@ -119,17 +119,17 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
   ];
 
   const handleActionClick = (actionId: string) => {
-    console.log('handleActionClick called with actionId:', actionId);
-    console.log('Current safePurchaseData:', safePurchaseData);
+    console.log('🔥 OptionsPage v2.2 - handleActionClick called with actionId:', actionId);
+    console.log('🔥 OptionsPage v2.2 - Current safePurchaseData:', safePurchaseData);
     
     try {
       setSelectedAction(actionId);
       setShowConfirmation(true);
       setActionResult(null);
-      console.log('Action click handled successfully');
-      console.log('Selected action set to:', actionId);
-      console.log('Show confirmation set to: true');
-      console.log('Is refund action?', actionId === 'refund');
+      console.log('🔥 OptionsPage v2.2 - Action click handled successfully');
+      console.log('🔥 OptionsPage v2.2 - Selected action set to:', actionId);
+      console.log('🔥 OptionsPage v2.2 - Show confirmation set to: true');
+      console.log('🔥 OptionsPage v2.2 - Is refund action?', actionId === 'refund');
     } catch (error) {
       console.error('Error in handleActionClick:', error);
     }

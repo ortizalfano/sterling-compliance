@@ -4,7 +4,7 @@ import App from './App.tsx'
 import './styles/globals.css'
 
 // Log para verificar que se está cargando la nueva versión
-console.log('🚀 Sterling Web v2.1 - Fixed React Error #130 - Loading...');
+console.log('🚀 Sterling Web v2.2 - Email Field Fix - Loading...');
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
