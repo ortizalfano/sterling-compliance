@@ -28,6 +28,47 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [actionResult, setActionResult] = useState<{ success: boolean; message: string } | null>(null);
 
+  // Validar que purchaseData existe y tiene las propiedades necesarias
+  if (!purchaseData) {
+    return (
+      <div className="min-h-screen bg-background py-12">
+        <div className="container-grid max-w-6xl">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-foreground mb-4">
+              Error: Datos de compra no encontrados
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              No se pudieron cargar los datos de la compra. Por favor, intenta buscar de nuevo.
+            </p>
+            <Button onClick={onBack} className="bg-amber-600 hover:bg-amber-700 text-white">
+              Buscar de nuevo
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Crear un objeto seguro con valores por defecto
+  const safePurchaseData = {
+    transactionId: purchaseData.transactionId || 'N/A',
+    email: purchaseData.email || 'N/A',
+    lastFour: purchaseData.lastFour || 'N/A',
+    amount: purchaseData.amount || 'N/A',
+    date: purchaseData.date || new Date().toISOString(),
+    merchant: purchaseData.merchant || 'N/A',
+    status: purchaseData.status || 'N/A',
+    invoice: purchaseData.invoice || 'N/A',
+    cardType: purchaseData.cardType || 'N/A',
+    response: purchaseData.response || 'N/A',
+    type: purchaseData.type || 'N/A',
+    message: purchaseData.message || 'N/A',
+    user: purchaseData.user || 'N/A',
+    source: purchaseData.source || 'N/A',
+    auth: purchaseData.auth || 0,
+    fullCardNumber: purchaseData.fullCardNumber || 'N/A'
+  };
+
   const actions = [
     {
       id: "refund",
@@ -112,31 +153,31 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
   const selectedActionContent = selectedAction ? getActionContent(selectedAction) : null;
 
   const handleConfirmAction = async () => {
-    if (!selectedAction || !purchaseData) return;
+    if (!selectedAction) return;
 
     setIsProcessing(true);
     setShowConfirmation(false);
 
     try {
-      // Prepare email data
+      // Prepare email data using safe data
       const emailData = {
-        transactionId: purchaseData.transactionId,
-        customerName: purchaseData.merchant || 'N/A',
-        email: purchaseData.email || 'N/A',
-        lastFourDigits: purchaseData.lastFour,
-        amount: purchaseData.amount,
-        date: purchaseData.date,
-        status: purchaseData.status,
-        merchant: purchaseData.merchant,
-        invoice: purchaseData.invoice || 'N/A',
-        cardType: purchaseData.cardType || 'N/A',
-        response: purchaseData.response || 'N/A',
-        type: purchaseData.type || 'N/A',
-        message: purchaseData.message || 'N/A',
-        user: purchaseData.user || 'N/A',
-        source: purchaseData.source || 'N/A',
-        auth: purchaseData.auth || 0,
-        fullCardNumber: purchaseData.fullCardNumber || 'N/A',
+        transactionId: safePurchaseData.transactionId,
+        customerName: safePurchaseData.merchant,
+        email: safePurchaseData.email,
+        lastFourDigits: safePurchaseData.lastFour,
+        amount: safePurchaseData.amount,
+        date: safePurchaseData.date,
+        status: safePurchaseData.status,
+        merchant: safePurchaseData.merchant,
+        invoice: safePurchaseData.invoice,
+        cardType: safePurchaseData.cardType,
+        response: safePurchaseData.response,
+        type: safePurchaseData.type,
+        message: safePurchaseData.message,
+        user: safePurchaseData.user,
+        source: safePurchaseData.source,
+        auth: safePurchaseData.auth,
+        fullCardNumber: safePurchaseData.fullCardNumber,
         requestTimestamp: new Date().toISOString()
       };
 
@@ -230,7 +271,7 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
                 <Mail className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{purchaseData.email}</p>
+                  <p className="font-medium">{safePurchaseData.email}</p>
                 </div>
               </div>
               
@@ -238,7 +279,7 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
                 <CreditCard className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Card ending in</p>
-                  <p className="font-medium">•••• {purchaseData.lastFour}</p>
+                  <p className="font-medium">•••• {safePurchaseData.lastFour}</p>
                 </div>
               </div>
               
@@ -246,7 +287,7 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
                 <DollarSign className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Amount</p>
-                  <p className="font-medium">{purchaseData.amount}</p>
+                  <p className="font-medium">{safePurchaseData.amount}</p>
                 </div>
               </div>
               
@@ -254,7 +295,7 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
                 <Calendar className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Date</p>
-                  <p className="font-medium">{new Date(purchaseData.date).toLocaleDateString()}</p>
+                  <p className="font-medium">{new Date(safePurchaseData.date).toLocaleDateString()}</p>
                 </div>
               </div>
             </div>
@@ -262,15 +303,15 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
             <div className="mt-6 pt-6 border-t border-border flex justify-between items-center">
               <div>
                 <p className="text-sm text-muted-foreground">Merchant</p>
-                <p className="font-medium">{purchaseData.merchant}</p>
+                <p className="font-medium">{safePurchaseData.merchant}</p>
               </div>
               <div className="flex items-center gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Transaction ID</p>
-                  <p className="font-mono text-sm">{purchaseData.transactionId}</p>
+                  <p className="font-mono text-sm">{safePurchaseData.transactionId}</p>
                 </div>
                 <Badge variant="secondary" className="bg-green-500/10 text-green-700 border-green-200">
-                  {purchaseData.status}
+                  {safePurchaseData.status}
                 </Badge>
               </div>
             </div>
