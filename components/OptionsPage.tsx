@@ -35,6 +35,8 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
   console.log('OptionsPage render - purchaseData:', purchaseData);
   console.log('OptionsPage render - selectedAction:', selectedAction);
   console.log('OptionsPage render - showConfirmation:', showConfirmation);
+  console.log('OptionsPage render - userEmail:', userEmail);
+  console.log('OptionsPage render - should show email field:', selectedAction === 'refund');
 
   // Validar que purchaseData existe y tiene las propiedades necesarias
   if (!purchaseData) {
@@ -124,6 +126,9 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
       setShowConfirmation(true);
       setActionResult(null);
       console.log('Action click handled successfully');
+      console.log('Selected action set to:', actionId);
+      console.log('Show confirmation set to: true');
+      console.log('Is refund action?', actionId === 'refund');
     } catch (error) {
       console.error('Error in handleActionClick:', error);
     }
@@ -134,7 +139,7 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
       case "refund":
         return {
           title: "Request Refund",
-          description: "We'll process your refund request and send you a confirmation email. Refunds typically take 3-5 business days to appear on your statement.",
+          description: "Please provide your email address so we can send you the refund confirmation. Refunds typically take 3-5 business days to appear on your statement.",
           confirmText: "Submit Refund Request",
         };
       case "cancel":
@@ -391,14 +396,14 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
                 <Input
                   id="user-email"
                   type="email"
-                  placeholder="Enter your email address"
+                  placeholder="your.email@example.com"
                   value={userEmail}
                   onChange={(e) => setUserEmail(e.target.value)}
                   className="w-full"
                   required
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  We'll send the refund confirmation to this email address.
+                  Please provide your email address so we can send you the refund confirmation.
                 </p>
               </div>
             )}
