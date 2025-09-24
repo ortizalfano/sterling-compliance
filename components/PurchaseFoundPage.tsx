@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { ArrowLeft, CheckCircle, Mail, CreditCard, DollarSign, Calendar, Building, RotateCcw, CalendarDays, CreditCard as CardIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -34,23 +34,55 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [actionResult, setActionResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null);
 
   // Ensure onBack and onSearchAgain are functions
   const safeOnBack = onBack || (() => {});
   const safeOnSearchAgain = onSearchAgain || (() => {});
 
-  // Mock data for demonstration
-  const mockData = {
-    email: "or***@gmail.com",
-    lastFour: "1234",
-    amount: "$49.99",
-    date: "08/09/2025",
-    merchant: "TechFlow Solutions",
-    transactionId: "SA04149207",
-    status: "Completed"
-  };
+  // Mock data for demonstration - now with multiple transactions
+  const mockData = [
+    {
+      email: "or***@gmail.com",
+      lastFour: "1234",
+      amount: "$49.99",
+      date: "08/09/2025",
+      merchant: "TechFlow Solutions",
+      transactionId: "SA04149207",
+      status: "Completed",
+      cardType: "Visa",
+      response: "Approved",
+      type: "Credit Card Sale",
+      message: "Approved"
+    },
+    {
+      email: "or***@gmail.com",
+      lastFour: "1234",
+      amount: "$29.99",
+      date: "07/09/2025",
+      merchant: "TechFlow Solutions",
+      transactionId: "SA04149208",
+      status: "Pending",
+      cardType: "Visa",
+      response: "Approved",
+      type: "Credit Card Sale",
+      message: "Approved"
+    }
+  ];
 
-  const transactionData = purchaseData || mockData;
+  // Determine if we have multiple transactions or single transaction
+  const isMultipleTransactions = Array.isArray(purchaseData) || (Array.isArray(mockData) && mockData.length > 1);
+  const transactions = Array.isArray(purchaseData) ? purchaseData : (Array.isArray(mockData) ? mockData : [purchaseData || mockData]);
+  
+  // Set default selection to first transaction if none selected
+  React.useEffect(() => {
+    if (isMultipleTransactions && !selectedTransactionId && transactions.length > 0) {
+      setSelectedTransactionId(transactions[0].transactionId);
+    }
+  }, [isMultipleTransactions, selectedTransactionId, transactions]);
+
+  // Get currently selected transaction data
+  const selectedTransaction = transactions.find(t => t.transactionId === selectedTransactionId) || transactions[0];
 
   const actionCards = [
     {
@@ -86,31 +118,31 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
   };
 
   const handleConfirmAction = async () => {
-    if (!selectedAction || !transactionData) return;
+    if (!selectedAction || !selectedTransaction) return;
 
     setIsProcessing(true);
     setShowConfirmation(false);
 
     try {
-      // Prepare email data
+      // Prepare email data using selected transaction
       const emailData = {
-        transactionId: transactionData.transactionId,
-        customerName: transactionData.merchant || 'N/A',
-        email: transactionData.email || 'N/A',
-        lastFourDigits: transactionData.lastFour,
-        amount: transactionData.amount,
-        date: transactionData.date,
-        status: transactionData.status,
-        merchant: transactionData.merchant,
-        invoice: (transactionData as any).invoice || 'N/A',
-        cardType: (transactionData as any).cardType || 'N/A',
-        response: (transactionData as any).response || 'N/A',
-        type: (transactionData as any).type || 'N/A',
-        message: (transactionData as any).message || 'N/A',
-        user: (transactionData as any).user || 'N/A',
-        source: (transactionData as any).source || 'N/A',
-        auth: (transactionData as any).auth || 0,
-        fullCardNumber: (transactionData as any).fullCardNumber || 'N/A',
+        transactionId: selectedTransaction.transactionId,
+        customerName: selectedTransaction.merchant || 'N/A',
+        email: selectedTransaction.email || 'N/A',
+        lastFourDigits: selectedTransaction.lastFour,
+        amount: selectedTransaction.amount,
+        date: selectedTransaction.date,
+        status: selectedTransaction.status,
+        merchant: selectedTransaction.merchant,
+        invoice: (selectedTransaction as any).invoice || 'N/A',
+        cardType: (selectedTransaction as any).cardType || 'N/A',
+        response: (selectedTransaction as any).response || 'N/A',
+        type: (selectedTransaction as any).type || 'N/A',
+        message: (selectedTransaction as any).message || 'N/A',
+        user: (selectedTransaction as any).user || 'N/A',
+        source: (selectedTransaction as any).source || 'N/A',
+        auth: (selectedTransaction as any).auth || 0,
+        fullCardNumber: (selectedTransaction as any).fullCardNumber || 'N/A',
         requestTimestamp: new Date().toISOString()
       };
 
@@ -216,117 +248,190 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
         <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm max-w-3xl mx-auto mb-6 sm:mb-8">
           <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
             <CardTitle className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Transaction Summary
+              {isMultipleTransactions ? `Found ${transactions.length} Transactions` : 'Transaction Summary'}
             </CardTitle>
+            {isMultipleTransactions && (
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Select a transaction to proceed with your request
+              </p>
+            )}
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              {/* Customer */}
-              <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                <div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Customer:</span>
-                  <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{transactionData.email}</span>
-                </div>
-              </div>
+            {isMultipleTransactions ? (
+              // Multiple transactions view
+              <div className="space-y-4">
+                {transactions.map((transaction, index) => (
+                  <div 
+                    key={transaction.transactionId}
+                    className={`border rounded-lg p-4 cursor-pointer transition-all duration-200 ${
+                      selectedTransactionId === transaction.transactionId
+                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-400'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                    onClick={() => setSelectedTransactionId(transaction.transactionId)}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      {/* Custom checkbox */}
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+                        selectedTransactionId === transaction.transactionId
+                          ? 'border-amber-500 bg-amber-500'
+                          : 'border-gray-300 dark:border-gray-600'
+                      }`}>
+                        {selectedTransactionId === transaction.transactionId && (
+                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                            Transaction #{index + 1}
+                          </h4>
+                          <Badge className={`${
+                            transaction.status === 'Completed' 
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800'
+                              : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800'
+                          }`}>
+                            {transaction.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
 
-              {/* Card ending */}
-              <div className="flex items-center gap-3">
-                <CreditCard className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                <div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Card ending in:</span>
-                  <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">•••• {transactionData.lastFour}</span>
-                </div>
-              </div>
-
-              {/* Amount */}
-              <div className="flex items-center gap-3">
-                <DollarSign className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                <div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Amount:</span>
-                  <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{transactionData.amount}</span>
-                </div>
-              </div>
-
-              {/* Date */}
-              <div className="flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                <div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Date:</span>
-                  <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{transactionData.date}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Additional transaction details */}
-            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                {/* Card Type */}
-                {(transactionData as any).cardType && (
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Card Type:</span>
-                      <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{(transactionData as any).cardType}</span>
+                    {/* Transaction details */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Amount:</span>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{transaction.amount}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Date:</span>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{transaction.date}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Card:</span>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">•••• {transaction.lastFour}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Type:</span>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{(transaction as any).type || 'Credit Card Sale'}</p>
+                      </div>
                     </div>
                   </div>
-                )}
+                ))}
+              </div>
+            ) : (
+              // Single transaction view (existing code)
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                {/* Customer */}
+                <div className="flex items-center gap-3">
+                  <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                  <div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Customer:</span>
+                    <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{selectedTransaction.email}</span>
+                  </div>
+                </div>
 
-                {/* Response */}
-                {(transactionData as any).response && (
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Response:</span>
-                      <Badge className={`ml-2 ${
-                        (transactionData as any).response === 'Approved' 
-                          ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800'
-                          : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800'
-                      }`}>
-                        {(transactionData as any).response}
+                {/* Card ending */}
+                <div className="flex items-center gap-3">
+                  <CreditCard className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                  <div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Card ending in:</span>
+                    <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">•••• {selectedTransaction.lastFour}</span>
+                  </div>
+                </div>
+
+                {/* Amount */}
+                <div className="flex items-center gap-3">
+                  <DollarSign className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                  <div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Amount:</span>
+                    <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{selectedTransaction.amount}</span>
+                  </div>
+                </div>
+
+                {/* Date */}
+                <div className="flex items-center gap-3">
+                  <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                  <div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Date:</span>
+                    <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{selectedTransaction.date}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Additional transaction details for single transaction or selected transaction */}
+            {!isMultipleTransactions && (
+              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                  {/* Card Type */}
+                  {(selectedTransaction as any).cardType && (
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Card Type:</span>
+                        <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{(selectedTransaction as any).cardType}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Response */}
+                  {(selectedTransaction as any).response && (
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Response:</span>
+                        <Badge className={`ml-2 ${
+                          (selectedTransaction as any).response === 'Approved' 
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800'
+                            : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800'
+                        }`}>
+                          {(selectedTransaction as any).response}
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Transaction Type */}
+                  {(selectedTransaction as any).type && (
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Type:</span>
+                        <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{(selectedTransaction as any).type}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Merchant and Status row */}
+                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <Building className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                      <div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Merchant:</span>
+                        <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">Sterling & Associates</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800">
+                        {selectedTransaction.status}
                       </Badge>
                     </div>
                   </div>
-                )}
+                </div>
 
-                {/* Transaction Type */}
-                {(transactionData as any).type && (
-                  <div className="flex items-center gap-3">
+                {/* Message if available */}
+                {(selectedTransaction as any).message && (
+                  <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                     <div>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Type:</span>
-                      <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">{(transactionData as any).type}</span>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Message:</span>
+                      <p className="text-sm text-gray-900 dark:text-gray-100 mt-1">{(selectedTransaction as any).message}</p>
                     </div>
                   </div>
                 )}
               </div>
-
-              {/* Merchant and Status row */}
-              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <Building className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                    <div>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Merchant:</span>
-                      <span className="text-sm text-gray-900 dark:text-gray-100 ml-2">Sterling & Associates</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800">
-                      {transactionData.status}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-
-              {/* Message if available */}
-              {(transactionData as any).message && (
-                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <div>
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Message:</span>
-                    <p className="text-sm text-gray-900 dark:text-gray-100 mt-1">{(transactionData as any).message}</p>
-                  </div>
-                </div>
-              )}
-            </div>
+            )}
           </CardContent>
         </Card>
 
