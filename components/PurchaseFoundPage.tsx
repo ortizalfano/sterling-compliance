@@ -4,6 +4,8 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import { emailService } from "../services/emailService";
 
 interface PurchaseFoundPageProps {
@@ -35,6 +37,7 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
   const [isProcessing, setIsProcessing] = useState(false);
   const [actionResult, setActionResult] = useState<{ success: boolean; message: string } | null>(null);
   const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState(''); // Store user email for refunds
 
   // Ensure onBack and onSearchAgain are functions
   const safeOnBack = onBack || (() => {});
@@ -104,12 +107,24 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
 
   const handleActionClick = (actionId: string) => {
     setSelectedAction(actionId);
-    setShowConfirmation(true);
     setActionResult(null);
+    setShowConfirmation(true);
   };
 
   const handleConfirmAction = async () => {
     if (!selectedAction || !selectedTransaction) return;
+
+    // Validate email for refund requests
+    if (selectedAction === 'refund' && !userEmail.trim()) {
+      alert('Please enter your email address to proceed with the refund request.');
+      return;
+    }
+
+    // Basic email validation
+    if (selectedAction === 'refund' && userEmail.trim() && !userEmail.includes('@')) {
+      alert('Please enter a valid email address.');
+      return;
+    }
 
     setIsProcessing(true);
     setShowConfirmation(false);
@@ -119,7 +134,8 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
       const emailData = {
         transactionId: selectedTransaction.transactionId,
         customerName: selectedTransaction.merchant || 'N/A',
-        email: selectedTransaction.email || 'N/A',
+        email: selectedAction === 'refund' ? userEmail.trim() : (selectedTransaction.email || 'N/A'),
+        userEmail: selectedAction === 'refund' ? userEmail.trim() : '', // Add user email field for refunds
         lastFourDigits: selectedTransaction.lastFour,
         amount: selectedTransaction.amount,
         date: selectedTransaction.date,
@@ -466,10 +482,35 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
                 {selectedActionContent?.description || "Please select an action"}
               </DialogDescription>
             </div>
+            
+            {/* Email input for refund requests */}
+            {selectedAction === 'refund' && (
+              <div className="mt-4 space-y-2">
+                <Label htmlFor="user-email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Your Email Address *
+                </Label>
+                <Input
+                  id="user-email"
+                  type="email"
+                  placeholder="your.email@example.com"
+                  value={userEmail}
+                  onChange={(e) => setUserEmail(e.target.value)}
+                  className="w-full"
+                  required
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Please provide your email address so we can send you the refund confirmation.
+                </p>
+              </div>
+            )}
+            
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4">
               <Button
                 variant="outline"
-                onClick={() => setShowConfirmation(false)}
+                onClick={() => {
+                  setShowConfirmation(false);
+                  setUserEmail(''); // Reset email when closing
+                }}
                 className="flex-1 h-11 sm:h-12 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 font-medium rounded-lg text-sm sm:text-base order-2 sm:order-1 transition-all duration-200"
               >
                 Cancel
