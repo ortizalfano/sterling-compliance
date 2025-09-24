@@ -69,10 +69,10 @@ export function LookupPage({ onBack, onFoundPurchase }: LookupPageProps) {
       );
 
       if (result.success && result.data && result.data.length > 0) {
-        // Convert Airtable transaction to display format
-        const transaction = result.data[0];
-        const purchaseData = {
+        // Convert all Airtable transactions to display format
+        const purchaseData = result.data.map(transaction => ({
           email: transaction.Customer || "N/A",
+          customerName: transaction.Customer || "N/A", // Add customer name
           lastFour: formData.lastFour,
           amount: `$${transaction.Amount.toFixed(2)}`,
           date: new Date(transaction.Created).toLocaleDateString(),
@@ -88,8 +88,15 @@ export function LookupPage({ onBack, onFoundPurchase }: LookupPageProps) {
           source: transaction.Source,
           auth: transaction.Auth,
           fullCardNumber: transaction["Card Number"]
-        };
-        onFoundPurchase(purchaseData);
+        }));
+        
+        // If only one transaction, pass it as a single object
+        // If multiple transactions, pass as array
+        if (purchaseData.length === 1) {
+          onFoundPurchase(purchaseData[0]);
+        } else {
+          onFoundPurchase(purchaseData);
+        }
       } else {
         setErrors({ 
           general: result.error || "We couldn't find a matching purchase. Please check your details and try again." 
