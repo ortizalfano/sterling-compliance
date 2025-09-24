@@ -365,13 +365,29 @@ Please provide your email address:`,
     }
 
     if (lowerMessage.includes('cancel') || lowerMessage.includes('subscription')) {
-      // Execute cancellation processing immediately (no email needed)
-      return await this.handleProcessing('cancel', state);
+      // For cancellations, collect email first
+      return {
+        message: `Great! I'll help you with your cancellation request.
+
+To process your cancellation, I need your email address where we can send the confirmation.
+
+Please provide your email address:`,
+        suggestions: [],
+        state: { ...state, step: 'collecting_email', pendingAction: 'cancel' }
+      };
     }
 
     if (lowerMessage.includes('update') || lowerMessage.includes('payment method')) {
-      // Execute payment update processing immediately (no email needed)
-      return await this.handleProcessing('update', state);
+      // For payment updates, collect email first
+      return {
+        message: `Great! I'll help you with your payment method update.
+
+To process your payment update, I need your email address where we can send the confirmation.
+
+Please provide your email address:`,
+        suggestions: [],
+        state: { ...state, step: 'collecting_email', pendingAction: 'update' }
+      };
     }
 
     // Handle transaction selection for multiple transactions
