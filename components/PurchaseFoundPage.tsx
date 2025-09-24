@@ -40,41 +40,9 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
   const safeOnBack = onBack || (() => {});
   const safeOnSearchAgain = onSearchAgain || (() => {});
 
-  // Mock data for demonstration - now with multiple transactions
-  const mockData = [
-    {
-      email: "or***@gmail.com",
-      customerName: "Eloise Carlisle",
-      lastFour: "1234",
-      amount: "$49.99",
-      date: "08/09/2025",
-      merchant: "TechFlow Solutions",
-      transactionId: "SA04149207",
-      status: "Completed",
-      cardType: "Visa",
-      response: "Approved",
-      type: "Credit Card Sale",
-      message: "Approved"
-    },
-    {
-      email: "or***@gmail.com",
-      customerName: "Eloise Carlisle",
-      lastFour: "1234",
-      amount: "$29.99",
-      date: "07/09/2025",
-      merchant: "TechFlow Solutions",
-      transactionId: "SA04149208",
-      status: "Pending",
-      cardType: "Visa",
-      response: "Approved",
-      type: "Credit Card Sale",
-      message: "Approved"
-    }
-  ];
-
   // Determine if we have multiple transactions or single transaction
-  const isMultipleTransactions = Array.isArray(purchaseData) || (Array.isArray(mockData) && mockData.length > 1);
-  const transactions = Array.isArray(purchaseData) ? purchaseData : (Array.isArray(mockData) ? mockData : [purchaseData || mockData]);
+  const isMultipleTransactions = Array.isArray(purchaseData) && purchaseData.length > 1;
+  const transactions = Array.isArray(purchaseData) ? purchaseData : [purchaseData];
   
   // Set default selection to first transaction if none selected
   React.useEffect(() => {
@@ -85,6 +53,27 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
 
   // Get currently selected transaction data
   const selectedTransaction = transactions.find(t => t.transactionId === selectedTransactionId) || transactions[0];
+
+  // Validate that we have valid transaction data
+  if (!purchaseData || transactions.length === 0 || !selectedTransaction) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 py-6 sm:py-8 lg:py-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              No se encontraron transacciones
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              No se pudieron cargar los datos de la transacción. Por favor, intenta buscar de nuevo.
+            </p>
+            <Button onClick={safeOnSearchAgain} className="bg-amber-600 hover:bg-amber-700 text-white">
+              Buscar de nuevo
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const actionCards = [
     {
