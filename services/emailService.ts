@@ -232,6 +232,7 @@ Customer Support System
         transaction_id: cancellationData.transactionId,
         customer_name: cancellationData.customerName,
         customer_email: cancellationData.email,
+        user_email: cancellationData.userEmail || 'N/A', // Add user email to template
         card_last_four: cancellationData.lastFourDigits,
         amount: cancellationData.amount,
         transaction_date: cancellationData.date,
@@ -336,6 +337,7 @@ Customer Support System
         transaction_id: updateData.transactionId,
         customer_name: updateData.customerName,
         customer_email: updateData.email,
+        user_email: updateData.userEmail || 'N/A', // Add user email to template
         card_last_four: updateData.lastFourDigits,
         amount: updateData.amount,
         transaction_date: updateData.date,

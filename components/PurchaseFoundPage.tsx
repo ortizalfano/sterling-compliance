@@ -114,14 +114,14 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
   const handleConfirmAction = async () => {
     if (!selectedAction || !selectedTransaction) return;
 
-    // Validate email for refund requests
-    if (selectedAction === 'refund' && !userEmail.trim()) {
-      alert('Please enter your email address to proceed with the refund request.');
+    // Validate email for all requests
+    if (!userEmail.trim()) {
+      alert('Please enter your email address to proceed with your request.');
       return;
     }
 
     // Basic email validation
-    if (selectedAction === 'refund' && userEmail.trim() && !userEmail.includes('@')) {
+    if (userEmail.trim() && !userEmail.includes('@')) {
       alert('Please enter a valid email address.');
       return;
     }
@@ -134,8 +134,8 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
       const emailData = {
         transactionId: selectedTransaction.transactionId,
         customerName: selectedTransaction.merchant || 'N/A',
-        email: selectedAction === 'refund' ? userEmail.trim() : (selectedTransaction.email || 'N/A'),
-        userEmail: selectedAction === 'refund' ? userEmail.trim() : '', // Add user email field for refunds
+        email: userEmail.trim(), // Use user email for all requests
+        userEmail: userEmail.trim(), // Add user email field for all requests
         lastFourDigits: selectedTransaction.lastFour,
         amount: selectedTransaction.amount,
         date: selectedTransaction.date,
@@ -483,26 +483,24 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
               </DialogDescription>
             </div>
             
-            {/* Email input for refund requests */}
-            {selectedAction === 'refund' && (
-              <div className="mt-4 space-y-2">
-                <Label htmlFor="user-email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Your Email Address *
-                </Label>
-                <Input
-                  id="user-email"
-                  type="email"
-                  placeholder="your.email@example.com"
-                  value={userEmail}
-                  onChange={(e) => setUserEmail(e.target.value)}
-                  className="w-full"
-                  required
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Please provide your email address so we can send you the refund confirmation.
-                </p>
-              </div>
-            )}
+            {/* Email input for all requests */}
+            <div className="mt-4 space-y-2">
+              <Label htmlFor="user-email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Your Email Address *
+              </Label>
+              <Input
+                id="user-email"
+                type="email"
+                placeholder="your.email@example.com"
+                value={userEmail}
+                onChange={(e) => setUserEmail(e.target.value)}
+                className="w-full"
+                required
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Please provide your email address so we can send you the confirmation.
+              </p>
+            </div>
             
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4">
               <Button
