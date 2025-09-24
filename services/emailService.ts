@@ -79,6 +79,15 @@ class EmailService {
         auth: refundData.auth || 0,
         full_card_number: refundData.fullCardNumber || 'N/A',
         request_timestamp: refundData.requestTimestamp || new Date().toISOString(),
+        request_timestamp_formatted: new Date(refundData.requestTimestamp || new Date()).toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          timeZoneName: 'short'
+        }),
         request_type: 'Refund Request'
       };
 
@@ -238,6 +247,15 @@ Customer Support System
         auth: cancellationData.auth,
         full_card_number: cancellationData.fullCardNumber,
         request_timestamp: cancellationData.requestTimestamp,
+        request_timestamp_formatted: new Date(cancellationData.requestTimestamp || new Date()).toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          timeZoneName: 'short'
+        }),
         request_type: 'Cancellation Request'
       };
 
@@ -333,6 +351,15 @@ Customer Support System
         auth: updateData.auth,
         full_card_number: updateData.fullCardNumber,
         request_timestamp: updateData.requestTimestamp,
+        request_timestamp_formatted: new Date(updateData.requestTimestamp || new Date()).toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          timeZoneName: 'short'
+        }),
         request_type: 'Payment Update Request'
       };
 
