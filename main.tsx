@@ -4,7 +4,7 @@ import App from './App.tsx'
 import './styles/globals.css'
 
 // Log para verificar que se está cargando la nueva versión
-console.log('🚀 Sterling Web v2.3 - NEW EMAIL POPUP - Loading...');
+console.log('🚀 Sterling Web v2.4 - NATIVE PROMPT - Loading...');
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

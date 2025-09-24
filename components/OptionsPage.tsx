@@ -130,12 +130,19 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
       setSelectedAction(actionId);
       setActionResult(null);
       
-      // NEW APPROACH: For refunds, show email prompt first
+      // NEW APPROACH: For refunds, use native browser prompt
       if (actionId === 'refund') {
-        console.log('🔥🔥🔥 REFUND ACTION - Showing NEW email prompt');
-        console.log('🔥🔥🔥 Setting showEmailPrompt to TRUE');
-        setShowEmailPrompt(true);
-        setShowConfirmation(false);
+        console.log('🔥🔥🔥 REFUND ACTION - Using native prompt');
+        const email = prompt('Please enter your email address for refund confirmation:');
+        if (email && email.trim() && email.includes('@')) {
+          console.log('🔥🔥🔥 EMAIL PROVIDED:', email);
+          setUserEmail(email.trim());
+          // Process refund immediately
+          handleConfirmAction();
+        } else if (email !== null) {
+          alert('Please enter a valid email address.');
+        }
+        return; // Don't show any popup
       } else {
         console.log('🔥 NON-REFUND ACTION - Showing normal confirmation');
         setShowConfirmation(true);
