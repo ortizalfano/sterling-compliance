@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
 import { 
   ArrowLeft, 
@@ -27,6 +29,7 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [actionResult, setActionResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [userEmail, setUserEmail] = useState('');
 
   // Debug logging
   console.log('OptionsPage render - purchaseData:', purchaseData);
@@ -168,6 +171,18 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
   const handleConfirmAction = async () => {
     if (!selectedAction) return;
 
+    // Validate email for refund requests
+    if (selectedAction === 'refund' && !userEmail.trim()) {
+      alert('Please enter your email address to proceed with the refund request.');
+      return;
+    }
+
+    // Basic email validation
+    if (selectedAction === 'refund' && userEmail.trim() && !userEmail.includes('@')) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
     setIsProcessing(true);
     setShowConfirmation(false);
 
@@ -176,7 +191,8 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
       const emailData = {
         transactionId: safePurchaseData.transactionId,
         customerName: safePurchaseData.merchant,
-        email: safePurchaseData.email,
+        email: selectedAction === 'refund' ? userEmail.trim() : safePurchaseData.email,
+        userEmail: selectedAction === 'refund' ? userEmail.trim() : '', // Add user email field
         lastFourDigits: safePurchaseData.lastFour,
         amount: safePurchaseData.amount,
         date: safePurchaseData.date,
@@ -365,10 +381,35 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
                 {selectedActionContent?.description}
               </DialogDescription>
             </DialogHeader>
+            
+            {/* Email input for refund requests */}
+            {selectedAction === 'refund' && (
+              <div className="mt-4 space-y-2">
+                <Label htmlFor="user-email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Your Email Address *
+                </Label>
+                <Input
+                  id="user-email"
+                  type="email"
+                  placeholder="Enter your email address"
+                  value={userEmail}
+                  onChange={(e) => setUserEmail(e.target.value)}
+                  className="w-full"
+                  required
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  We'll send the refund confirmation to this email address.
+                </p>
+              </div>
+            )}
+            
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-4 sm:mt-6">
               <Button
                 variant="outline"
-                onClick={() => setShowConfirmation(false)}
+                onClick={() => {
+                  setShowConfirmation(false);
+                  setUserEmail(''); // Reset email when closing
+                }}
                 className="flex-1 h-11 sm:h-12 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 font-medium rounded-lg text-sm sm:text-base order-2 sm:order-1 transition-all duration-200 focus-ring"
               >
                 Cancel

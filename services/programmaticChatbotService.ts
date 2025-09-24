@@ -11,11 +11,13 @@ export interface ChatbotSession {
 }
 
 export interface ChatbotState {
-  step: 'greeting' | 'collecting_card' | 'searching' | 'results' | 'processing';
+  step: 'greeting' | 'collecting_card' | 'searching' | 'results' | 'collecting_email' | 'processing';
   lastFourDigits?: string;
   foundTransactions?: Transaction[];
   selectedTransaction?: Transaction;
   airtableTransaction?: AirtableTransaction;
+  userEmail?: string;
+  pendingAction?: 'refund' | 'cancel' | 'update';
 }
 
 export interface ChatbotResponse {
@@ -104,6 +106,9 @@ class ProgrammaticChatbotService {
 
       case 'results':
         return await this.handleResults(message, state);
+
+      case 'collecting_email':
+        return await this.handleEmailCollection(message, state);
 
       case 'processing':
         return await this.handleProcessing(message, state);
@@ -297,6 +302,41 @@ Please specify which transaction you'd like to work with by mentioning:
   }
 
   /**
+   * Handle email collection step
+   */
+  private async handleEmailCollection(message: string, state: ChatbotState): Promise<ChatbotResponse> {
+    // Extract email from message
+    const emailMatch = message.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/);
+    
+    if (emailMatch) {
+      const email = emailMatch[0];
+      console.log('📧 Email collected:', email);
+      
+      // Validate email format
+      if (!email.includes('@') || !email.includes('.')) {
+        return {
+          message: 'Please provide a valid email address. For example: user@example.com',
+          suggestions: [],
+          state: { ...state, step: 'collecting_email' }
+        };
+      }
+      
+      // Process the pending action with the email
+      return await this.handleProcessing(state.pendingAction || 'refund', { 
+        ...state, 
+        userEmail: email,
+        step: 'processing'
+      });
+    }
+    
+    return {
+      message: 'I need a valid email address to proceed with your request. Please provide your email address (e.g., user@example.com):',
+      suggestions: [],
+      state: { ...state, step: 'collecting_email' }
+    };
+  }
+
+  /**
    * Handle results step
    */
   private async handleResults(message: string, state: ChatbotState): Promise<ChatbotResponse> {
@@ -310,19 +350,27 @@ Please specify which transaction you'd like to work with by mentioning:
 
     const lowerMessage = message.toLowerCase();
 
-    // Check for action requests - execute immediately
+    // Check for action requests
     if (lowerMessage.includes('refund') || lowerMessage.includes('money back')) {
-      // Execute refund processing immediately
-      return await this.handleProcessing('refund', state);
+      // For refunds, collect email first
+      return {
+        message: `Great! I'll help you with your refund request.
+
+To process your refund, I need your email address where we can send the confirmation.
+
+Please provide your email address:`,
+        suggestions: [],
+        state: { ...state, step: 'collecting_email', pendingAction: 'refund' }
+      };
     }
 
     if (lowerMessage.includes('cancel') || lowerMessage.includes('subscription')) {
-      // Execute cancellation processing immediately
+      // Execute cancellation processing immediately (no email needed)
       return await this.handleProcessing('cancel', state);
     }
 
     if (lowerMessage.includes('update') || lowerMessage.includes('payment method')) {
-      // Execute payment update processing immediately
+      // Execute payment update processing immediately (no email needed)
       return await this.handleProcessing('update', state);
     }
 
@@ -380,6 +428,7 @@ What would you like to do with this transaction?`,
         transactionId: transaction.transactionId,
         customerName: transaction.customerName || 'N/A',
         email: transaction.email || 'N/A',
+        userEmail: state.userEmail || '', // Include user email
         lastFourDigits: transaction.lastFourDigits,
         amount: `$${transaction.amount.toFixed(2)}`,
         date: new Date(transaction.transactionDate).toLocaleDateString('en-US'),
