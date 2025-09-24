@@ -67,8 +67,23 @@ class AirtableService {
         // Parse date correctly - handle MM/DD/YYYY format
         let date: Date;
         if (transactionDate.includes('/')) {
-          const [month, day, year] = transactionDate.split('/');
-          date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+          const parts = transactionDate.split('/');
+          if (parts.length === 3) {
+            // Handle MM/DD/YYYY format
+            const [month, day, year] = parts;
+            date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+            console.log('🔧 Date parsing MM/DD/YYYY:', { 
+              input: transactionDate, 
+              parts, 
+              month: parseInt(month), 
+              day: parseInt(day), 
+              year: parseInt(year),
+              parsed: date,
+              iso: date.toISOString()
+            });
+          } else {
+            date = new Date(transactionDate);
+          }
         } else {
           date = new Date(transactionDate);
         }
