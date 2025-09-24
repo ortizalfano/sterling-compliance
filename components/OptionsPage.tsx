@@ -25,6 +25,9 @@ interface OptionsPageProps {
 }
 
 export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
+  // FORCE LOG - This should appear in console
+  console.log('🚨🚨🚨 OPTIONSPAGE COMPONENT LOADED - VERSION 2.2 🚨🚨🚨');
+  
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -389,25 +392,29 @@ export function OptionsPage({ purchaseData, onBack }: OptionsPageProps) {
             </DialogHeader>
             
             {/* Email input for refund requests - ALWAYS show for refunds */}
-            {selectedAction === 'refund' ? (
-              <div className="mt-4 space-y-2">
-                <Label htmlFor="user-email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Your Email Address *
-                </Label>
-                <Input
-                  id="user-email"
-                  type="email"
-                  placeholder="your.email@example.com"
-                  value={userEmail}
-                  onChange={(e) => setUserEmail(e.target.value)}
-                  className="w-full"
-                  required
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Please provide your email address so we can send you the refund confirmation.
-                </p>
-              </div>
-            ) : null}
+            {(() => {
+              console.log('🚨 RENDERING EMAIL FIELD SECTION - selectedAction:', selectedAction);
+              console.log('🚨 selectedAction === "refund":', selectedAction === 'refund');
+              return selectedAction === 'refund' ? (
+                <div className="mt-4 space-y-2">
+                  <Label htmlFor="user-email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Your Email Address *
+                  </Label>
+                  <Input
+                    id="user-email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={userEmail}
+                    onChange={(e) => setUserEmail(e.target.value)}
+                    className="w-full"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Please provide your email address so we can send you the refund confirmation.
+                  </p>
+                </div>
+              ) : null;
+            })()}
             
             {/* Debug info - remove in production */}
             {process.env.NODE_ENV === 'development' && (
