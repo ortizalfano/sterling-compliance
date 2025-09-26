@@ -27,6 +27,20 @@ export function ChatWidget() {
     scrollToBottom();
   }, [messages]);
 
+  // Close chat when conversation is ended
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.message.includes('Thank you for using Sterling & Associates support! Have a great day!')) {
+        // Close chat after 3 seconds
+        const timer = setTimeout(() => {
+          setIsOpen(false);
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [messages]);
+
   const handleSendMessage = async () => {
     console.log('handleSendMessage called with:', inputValue);
     if (!inputValue.trim() || isLoading) {

@@ -11,7 +11,7 @@ export interface ChatbotSession {
 }
 
 export interface ChatbotState {
-  step: 'greeting' | 'collecting_card' | 'searching' | 'results' | 'collecting_email' | 'processing';
+  step: 'greeting' | 'collecting_card' | 'searching' | 'results' | 'collecting_email' | 'processing' | 'conversation_ended';
   lastFourDigits?: string;
   foundTransactions?: Transaction[];
   selectedTransaction?: Transaction;
@@ -94,6 +94,15 @@ class ProgrammaticChatbotService {
    * Handle user message based on current state
    */
   private async handleMessage(message: string, state: ChatbotState): Promise<ChatbotResponse> {
+    // Handle "End conversation" regardless of current step
+    if (message.toLowerCase().includes('end conversation') || message.toLowerCase().includes('end chat')) {
+      return {
+        message: 'Thank you for using Sterling & Associates support! Have a great day! 👋',
+        suggestions: [],
+        state: { ...state, step: 'conversation_ended' }
+      };
+    }
+
     switch (state.step) {
       case 'greeting':
         return this.handleGreeting(message, state);
@@ -112,6 +121,13 @@ class ProgrammaticChatbotService {
 
       case 'processing':
         return await this.handleProcessing(message, state);
+
+      case 'conversation_ended':
+        return {
+          message: 'Thank you for using Sterling & Associates support! Have a great day! 👋',
+          suggestions: [],
+          state: { ...state, step: 'conversation_ended' }
+        };
 
       default:
         return {
