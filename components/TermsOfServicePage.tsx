@@ -45,80 +45,81 @@ export function TermsOfServicePage({ onBack }: TermsOfServicePageProps) {
             <div className="prose prose-sm sm:prose-base max-w-none text-gray-700 dark:text-gray-300">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">1. Acceptance of Terms</h3>
               <p className="mb-4">
-                By accessing and using Sterling & Associates services, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+                By accessing or using sterling-compliance.vercel.app (the "Service"), you agree to these Terms of Service ("Terms"). If you do not agree, do not use the Service.
               </p>
 
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">2. Use License</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">2. Changes to Terms</h3>
               <p className="mb-4">
-                Permission is granted to temporarily download one copy of the materials on Sterling & Associates' website for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
+                We may modify these Terms at any time. Updates will be posted on this page, and continued use constitutes acceptance.
               </p>
+
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">3. Description of Service</h3>
+              <p className="mb-4">
+                We provide compliance support tools and related services. Features, content, and availability may change.
+              </p>
+
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">4. Accounts & Security</h3>
               <ul className="list-disc pl-6 mb-4 space-y-1">
-                <li>modify or copy the materials</li>
-                <li>use the materials for any commercial purpose or for any public display</li>
-                <li>attempt to reverse engineer any software contained on the website</li>
-                <li>remove any copyright or other proprietary notations from the materials</li>
+                <li>You may be required to create an account.</li>
+                <li>You are responsible for your account credentials.</li>
+                <li>Notify us immediately of unauthorized use.</li>
               </ul>
 
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">3. Service Description</h3>
-              <p className="mb-4">
-                Sterling & Associates provides payment processing services for various online merchants and subscription services. We act as a secure payment processor, facilitating transactions between customers and our partner merchants.
-              </p>
-
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">4. User Responsibilities</h3>
-              <p className="mb-4">
-                Users are responsible for:
-              </p>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">5. Prohibited Use</h3>
+              <p className="mb-4">You agree not to use the Service for:</p>
               <ul className="list-disc pl-6 mb-4 space-y-1">
-                <li>Providing accurate and complete information</li>
-                <li>Maintaining the security of their account information</li>
-                <li>Complying with all applicable laws and regulations</li>
-                <li>Not using our services for any illegal or unauthorized purpose</li>
+                <li>Illegal or fraudulent purposes.</li>
+                <li>Uploading viruses or harmful content.</li>
+                <li>Interfering with the platform or security.</li>
+                <li>Violating applicable laws.</li>
               </ul>
 
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">5. Payment Terms</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">6. Intellectual Property</h3>
               <p className="mb-4">
-                All payments are processed securely through our payment processing system. By making a purchase, you agree to pay all charges associated with your account. Refunds are subject to our Refund Policy.
+                All content, design, and trademarks belong to Sterling & Associates LLC or its licensors. You may not reproduce, distribute, or copy without permission.
               </p>
 
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">6. Privacy Policy</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">7. Third-Party Links</h3>
               <p className="mb-4">
-                Your privacy is important to us. Please review our Privacy Policy, which also governs your use of the service, to understand our practices.
+                We may link to external services. We are not responsible for their content or practices.
               </p>
 
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">7. Disclaimers</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">8. Disclaimer of Warranties</h3>
               <p className="mb-4">
-                The information on this website is provided on an "as is" basis. To the fullest extent permitted by law, Sterling & Associates excludes all representations, warranties, conditions and terms relating to our website and the use of this website.
+                The Service is provided "as is" and "as available," without warranties of any kind.
               </p>
 
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">8. Limitations</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">9. Limitation of Liability</h3>
               <p className="mb-4">
-                In no event shall Sterling & Associates or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on Sterling & Associates' website, even if Sterling & Associates or a Sterling & Associates authorized representative has been notified orally or in writing of the possibility of such damage.
+                Sterling & Associates LLC is not liable for indirect, incidental, or consequential damages resulting from use of the Service.
               </p>
 
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">9. Accuracy of Materials</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">10. Indemnification</h3>
               <p className="mb-4">
-                The materials appearing on Sterling & Associates' website could include technical, typographical, or photographic errors. Sterling & Associates does not warrant that any of the materials on its website are accurate, complete, or current.
+                You agree to indemnify and hold us harmless against claims arising from your use of the Service.
               </p>
 
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">10. Links</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">11. Termination</h3>
               <p className="mb-4">
-                Sterling & Associates has not reviewed all of the sites linked to our website and is not responsible for the contents of any such linked site. The inclusion of any link does not imply endorsement by Sterling & Associates of the site.
-              </p>
-
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">11. Modifications</h3>
-              <p className="mb-4">
-                Sterling & Associates may revise these terms of service for its website at any time without notice. By using this website, you are agreeing to be bound by the then current version of these terms of service.
+                We may suspend or terminate your access without notice if you violate these Terms.
               </p>
 
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">12. Governing Law</h3>
               <p className="mb-4">
-                These terms and conditions are governed by and construed in accordance with the laws of Georgia, USA and you irrevocably submit to the exclusive jurisdiction of the courts in that state or location.
+                These Terms are governed by the laws of the State of Georgia, USA. Disputes will be resolved in courts located in Fulton County, Georgia.
+              </p>
+
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">13. Severability</h3>
+              <p className="mb-4">
+                If any part of these Terms is invalid, the remaining provisions remain in force.
+              </p>
+
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">14. Entire Agreement</h3>
+              <p className="mb-4">
+                These Terms, along with posted policies, form the full agreement between you and Sterling & Associates LLC.
               </p>
 
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Contact Information</h3>
-              <p className="mb-4">
-                If you have any questions about these Terms of Service, please contact us:
-              </p>
               <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                 <p className="font-medium text-gray-900 dark:text-gray-100">Sterling & Associates LLC</p>
                 <p>1005 Virginia Ave, Ste 230</p>
