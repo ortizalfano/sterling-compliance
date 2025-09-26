@@ -5,11 +5,14 @@ import { HomePage } from "./components/HomePage";
 import { LookupPage } from "./components/LookupPage";
 import { OptionsPage } from "./components/OptionsPage";
 import { PurchaseFoundPage } from "./components/PurchaseFoundPage";
+import { TermsOfServicePage } from "./components/TermsOfServicePage";
+import { PrivacyPolicyPage } from "./components/PrivacyPolicyPage";
+import { RefundPolicyPage } from "./components/RefundPolicyPage";
 import { ChatWidget } from "./components/ChatWidget";
 import { Toaster } from "./components/ui/sonner";
 import ErrorBoundary from "./components/ErrorBoundary";
 
-type Page = "home" | "lookup" | "options" | "help" | "purchase-found";
+type Page = "home" | "lookup" | "options" | "help" | "purchase-found" | "terms" | "privacy" | "refund";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>("home");
@@ -61,6 +64,18 @@ export default function App() {
     setCurrentPage("lookup");
   };
 
+  const handleNavigateToTerms = () => {
+    setCurrentPage("terms");
+  };
+
+  const handleNavigateToPrivacy = () => {
+    setCurrentPage("privacy");
+  };
+
+  const handleNavigateToRefund = () => {
+    setCurrentPage("refund");
+  };
+
   const renderCurrentPage = () => {
     switch (currentPage) {
       case "home":
@@ -104,6 +119,24 @@ export default function App() {
             purchaseData={purchaseData}
           />
         );
+      case "terms":
+        return (
+          <TermsOfServicePage
+            onBack={handleBackToHome}
+          />
+        );
+      case "privacy":
+        return (
+          <PrivacyPolicyPage
+            onBack={handleBackToHome}
+          />
+        );
+      case "refund":
+        return (
+          <RefundPolicyPage
+            onBack={handleBackToHome}
+          />
+        );
       default:
         return (
           <HomePage
@@ -122,7 +155,11 @@ export default function App() {
         {renderCurrentPage()}
       </main>
       
-      <Footer />
+      <Footer 
+        onNavigateToTerms={handleNavigateToTerms}
+        onNavigateToPrivacy={handleNavigateToPrivacy}
+        onNavigateToRefund={handleNavigateToRefund}
+      />
       <ChatWidget />
       <Toaster />
     </div>
