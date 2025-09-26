@@ -77,20 +77,20 @@ export enum TransactionStatus {
   REFUNDED = 'Refunded'
 }
 
-export enum RefundStatus {
-  NONE = 'None',
-  REQUESTED = 'Requested',
-  APPROVED = 'Approved',
-  DENIED = 'Denied'
-}
-
-// Airtable-specific refund status enum
+// Airtable-specific refund status enum (declared first)
 export enum RefundStatusAirtable {
   NONE = 'None',
   REQUESTED = 'Requested',
   APPROVED = 'Approved',
   REJECTED = 'Rejected',
   PROCESSED = 'Processed'
+}
+
+export enum RefundStatus {
+  NONE = 'None',
+  REQUESTED = 'Requested',
+  APPROVED = 'Approved',
+  DENIED = 'Denied'
 }
 
 export enum CardType {

@@ -57,6 +57,9 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
   const isMultipleTransactions = Array.isArray(purchaseData) && purchaseData.length > 1;
   const transactions = Array.isArray(purchaseData) ? purchaseData : [purchaseData];
   
+  // Get currently selected transaction data
+  const selectedTransaction = transactions.find(t => t.transactionId === selectedTransactionId) || transactions[0];
+  
   // Set default selection to first transaction if none selected
   React.useEffect(() => {
     if (isMultipleTransactions && !selectedTransactionId && transactions.length > 0) {
@@ -95,9 +98,6 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
 
     checkRefundStatus();
   }, [selectedTransaction?.transactionId]);
-
-  // Get currently selected transaction data
-  const selectedTransaction = transactions.find(t => t.transactionId === selectedTransactionId) || transactions[0];
 
   // Validate that we have valid transaction data
   if (!purchaseData || transactions.length === 0 || !selectedTransaction) {
