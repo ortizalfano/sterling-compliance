@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { airtableService } from './airtableService';
 import { emailService } from './emailService';
-import { Transaction, AirtableTransaction, RefundStatusAirtable } from '../types';
+import { Transaction, AirtableTransaction, RefundStatusAirtable, CancellationStatusAirtable } from '../types';
 
 export interface ChatbotSession {
   id: string;
@@ -420,6 +420,45 @@ Please provide your email address:`,
     }
 
     if (lowerMessage.includes('cancel') || lowerMessage.includes('subscription')) {
+      // Check cancellation status first
+      const selectedTransaction = state.selectedTransaction || state.foundTransactions?.[0];
+      if (selectedTransaction) {
+        try {
+          const cancellationStatusResult = await airtableService.checkCancellationStatus(selectedTransaction.transactionId);
+          if (cancellationStatusResult.success && cancellationStatusResult.data) {
+            const cancellationStatus = cancellationStatusResult.data;
+            
+            if (!cancellationStatus.canRequestCancellation) {
+              let statusMessage = '';
+              if (cancellationStatus.cancellationStatus === CancellationStatusAirtable.REQUESTED) {
+                statusMessage = 'A cancellation request is already pending for this transaction.';
+              } else if (cancellationStatus.cancellationStatus === CancellationStatusAirtable.APPROVED) {
+                statusMessage = 'This transaction has already been approved for cancellation.';
+              } else if (cancellationStatus.cancellationStatus === CancellationStatusAirtable.PROCESSED) {
+                statusMessage = 'This transaction has already been processed for cancellation.';
+              } else {
+                statusMessage = 'A cancellation request already exists for this transaction.';
+              }
+              
+              return {
+                message: `❌ **Cancellation Request Not Available**
+
+${statusMessage}
+
+${cancellationStatus.cancellationRequestDate ? `📅 **Requested on:** ${new Date(cancellationStatus.cancellationRequestDate).toLocaleDateString()}` : ''}
+
+What else can I help you with?`,
+                suggestions: ['Request refund', 'Update payment method', 'Check another transaction', 'End conversation'],
+                state: { ...state, step: 'results' }
+              };
+            }
+          }
+        } catch (error) {
+          console.error('Error checking cancellation status:', error);
+          // Continue with cancellation request if check fails
+        }
+      }
+      
       // For cancellations, collect email first
       return {
         message: `Great! I'll help you with your cancellation request.
@@ -534,6 +573,14 @@ What would you like to do with this transaction?`,
         actionDescription = 'refund';
       } else if (actionType === 'cancel') {
         console.log('📧 Sending cancellation request email...');
+        
+        // First update Airtable with cancellation request
+        const cancellationUpdateResult = await airtableService.requestCancellation(transaction.transactionId, state.userEmail || '');
+        if (!cancellationUpdateResult.success) {
+          console.error('Failed to update cancellation status in Airtable:', cancellationUpdateResult.error);
+          // Continue with email even if Airtable update fails
+        }
+        
         emailResult = await emailService.sendCancellationRequest(emailData);
         actionDescription = 'cancellation';
       } else if (actionType === 'update') {

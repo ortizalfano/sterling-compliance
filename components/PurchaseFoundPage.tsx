@@ -8,7 +8,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { emailService } from "../services/emailService";
 import { airtableService } from "../services/airtableService";
-import { RefundStatusAirtable } from "../types";
+import { RefundStatusAirtable, CancellationStatusAirtable } from "../types";
 
 interface PurchaseFoundPageProps {
   onBack: () => void;
@@ -48,6 +48,14 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
     canRequestRefund: boolean;
   } | null>(null);
   const [isCheckingRefund, setIsCheckingRefund] = useState(false);
+  const [cancellationStatus, setCancellationStatus] = useState<{
+    hasCancellationRequest: boolean;
+    cancellationStatus?: CancellationStatusAirtable;
+    cancellationRequestDate?: string;
+    cancellationRequestEmail?: string;
+    canRequestCancellation: boolean;
+  } | null>(null);
+  const [isCheckingCancellation, setIsCheckingCancellation] = useState(false);
 
   // Ensure onBack and onSearchAgain are functions
   const safeOnBack = onBack || (() => {});
@@ -97,6 +105,38 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
     };
 
     checkRefundStatus();
+  }, [selectedTransaction?.transactionId]);
+
+  // Check cancellation status when transaction is selected
+  React.useEffect(() => {
+    const checkCancellationStatus = async () => {
+      if (!selectedTransaction?.transactionId) return;
+      
+      setIsCheckingCancellation(true);
+      try {
+        const result = await airtableService.checkCancellationStatus(selectedTransaction.transactionId);
+        if (result.success) {
+          setCancellationStatus(result.data);
+        } else {
+          console.error('Error checking cancellation status:', result.error);
+          // Set default values if check fails
+          setCancellationStatus({
+            hasCancellationRequest: false,
+            canRequestCancellation: true
+          });
+        }
+      } catch (error) {
+        console.error('Error checking cancellation status:', error);
+        setCancellationStatus({
+          hasCancellationRequest: false,
+          canRequestCancellation: true
+        });
+      } finally {
+        setIsCheckingCancellation(false);
+      }
+    };
+
+    checkCancellationStatus();
   }, [selectedTransaction?.transactionId]);
 
   // Validate that we have valid transaction data
@@ -157,6 +197,23 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
         : refundStatus.refundStatus === RefundStatusAirtable.PROCESSED 
         ? 'This transaction has already been processed for refund.'
         : 'A refund request already exists for this transaction.';
+      
+      setActionResult({ 
+        success: false, 
+        message: statusMessage 
+      });
+      return;
+    }
+
+    // Check if trying to request cancellation and it's not allowed
+    if (actionId === 'cancel' && cancellationStatus && !cancellationStatus.canRequestCancellation) {
+      const statusMessage = cancellationStatus.cancellationStatus === CancellationStatusAirtable.REQUESTED 
+        ? 'A cancellation request is already pending for this transaction.'
+        : cancellationStatus.cancellationStatus === CancellationStatusAirtable.APPROVED 
+        ? 'This transaction has already been approved for cancellation.'
+        : cancellationStatus.cancellationStatus === CancellationStatusAirtable.PROCESSED 
+        ? 'This transaction has already been processed for cancellation.'
+        : 'A cancellation request already exists for this transaction.';
       
       setActionResult({ 
         success: false, 
@@ -228,6 +285,13 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
           successMessage = 'Your refund request has been sent to our support team. You\'ll receive a confirmation email within the next few hours.';
           break;
         case 'cancel':
+          // First update Airtable with cancellation request
+          const cancellationUpdateResult = await airtableService.requestCancellation(selectedTransaction.transactionId, userEmail.trim());
+          if (!cancellationUpdateResult.success) {
+            console.error('Failed to update cancellation status in Airtable:', cancellationUpdateResult.error);
+            // Continue with email even if Airtable update fails
+          }
+          
           emailResult = await emailService.sendCancellationRequest(emailData);
           successMessage = 'Your cancellation request has been sent to our support team. You\'ll receive a confirmation email shortly.';
           break;
@@ -518,8 +582,10 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
           {actionCards.map((action, index) => {
             const isRefundAction = action.id === 'refund';
-            const isDisabled = isRefundAction && refundStatus && !refundStatus.canRequestRefund;
-            const isChecking = isRefundAction && isCheckingRefund;
+            const isCancellationAction = action.id === 'cancel';
+            const isDisabled = (isRefundAction && refundStatus && !refundStatus.canRequestRefund) || 
+                              (isCancellationAction && cancellationStatus && !cancellationStatus.canRequestCancellation);
+            const isChecking = (isRefundAction && isCheckingRefund) || (isCancellationAction && isCheckingCancellation);
             
             return (
               <Card 
@@ -567,6 +633,30 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
                             )}
                           </span>
                         )}
+                        {isCancellationAction && cancellationStatus && (
+                          <span className="ml-2">
+                            {cancellationStatus.cancellationStatus === CancellationStatusAirtable.REQUESTED && (
+                              <Badge className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800 text-xs">
+                                Pending
+                              </Badge>
+                            )}
+                            {cancellationStatus.cancellationStatus === CancellationStatusAirtable.APPROVED && (
+                              <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800 text-xs">
+                                Approved
+                              </Badge>
+                            )}
+                            {cancellationStatus.cancellationStatus === CancellationStatusAirtable.REJECTED && (
+                              <Badge className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800 text-xs">
+                                Rejected
+                              </Badge>
+                            )}
+                            {cancellationStatus.cancellationStatus === CancellationStatusAirtable.PROCESSED && (
+                              <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800 text-xs">
+                                Processed
+                              </Badge>
+                            )}
+                          </span>
+                        )}
                       </h3>
                       <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                         {isRefundAction && refundStatus && refundStatus.hasRefundRequest ? (
@@ -576,6 +666,13 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
                             {refundStatus.refundStatus === RefundStatusAirtable.REJECTED && 'Refund was rejected. You can request again if needed.'}
                             {refundStatus.refundStatus === RefundStatusAirtable.PROCESSED && 'Refund has been processed successfully.'}
                           </>
+                        ) : isCancellationAction && cancellationStatus && cancellationStatus.hasCancellationRequest ? (
+                          <>
+                            {cancellationStatus.cancellationStatus === CancellationStatusAirtable.REQUESTED && 'Cancellation request is pending review.'}
+                            {cancellationStatus.cancellationStatus === CancellationStatusAirtable.APPROVED && 'Cancellation has been approved and will be processed.'}
+                            {cancellationStatus.cancellationStatus === CancellationStatusAirtable.REJECTED && 'Cancellation was rejected. You can request again if needed.'}
+                            {cancellationStatus.cancellationStatus === CancellationStatusAirtable.PROCESSED && 'Cancellation has been processed successfully.'}
+                          </>
                         ) : (
                           action.description
                         )}
@@ -583,6 +680,11 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
                       {isRefundAction && refundStatus && refundStatus.refundRequestDate && (
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           Requested: {new Date(refundStatus.refundRequestDate).toLocaleDateString()}
+                        </p>
+                      )}
+                      {isCancellationAction && cancellationStatus && cancellationStatus.cancellationRequestDate && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Requested: {new Date(cancellationStatus.cancellationRequestDate).toLocaleDateString()}
                         </p>
                       )}
                     </div>

@@ -37,6 +37,12 @@ export interface AirtableTransaction {
   refund_request_email?: string; // Email used to request refund
   refund_approval_date?: string; // Date when team approved/rejected refund
   refund_notes?: string; // Team notes about the refund
+  // Cancellation tracking fields
+  cancellation_status?: CancellationStatusAirtable; // Single select (None, Requested, Approved, Rejected, Processed)
+  cancellation_request_date?: string; // Date when customer requested cancellation
+  cancellation_request_email?: string; // Email used to request cancellation
+  cancellation_approval_date?: string; // Date when team approved/rejected cancellation
+  cancellation_notes?: string; // Team notes about the cancellation
 }
 
 export interface Merchant {
@@ -79,6 +85,15 @@ export enum TransactionStatus {
 
 // Airtable-specific refund status enum (declared first)
 export enum RefundStatusAirtable {
+  NONE = 'None',
+  REQUESTED = 'Requested',
+  APPROVED = 'Approved',
+  REJECTED = 'Rejected',
+  PROCESSED = 'Processed'
+}
+
+// Airtable-specific cancellation status enum
+export enum CancellationStatusAirtable {
   NONE = 'None',
   REQUESTED = 'Requested',
   APPROVED = 'Approved',
