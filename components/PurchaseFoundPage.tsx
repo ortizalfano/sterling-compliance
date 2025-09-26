@@ -7,6 +7,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { emailService } from "../services/emailService";
+import { airtableService } from "../services/airtableService";
+import { RefundStatusAirtable } from "../types";
 
 interface PurchaseFoundPageProps {
   onBack: () => void;
@@ -38,6 +40,14 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
   const [actionResult, setActionResult] = useState<{ success: boolean; message: string } | null>(null);
   const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState(''); // Store user email for refunds
+  const [refundStatus, setRefundStatus] = useState<{
+    hasRefundRequest: boolean;
+    refundStatus?: RefundStatusAirtable;
+    refundRequestDate?: string;
+    refundRequestEmail?: string;
+    canRequestRefund: boolean;
+  } | null>(null);
+  const [isCheckingRefund, setIsCheckingRefund] = useState(false);
 
   // Ensure onBack and onSearchAgain are functions
   const safeOnBack = onBack || (() => {});
@@ -53,6 +63,38 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
       setSelectedTransactionId(transactions[0].transactionId);
     }
   }, [isMultipleTransactions, selectedTransactionId, transactions]);
+
+  // Check refund status when transaction is selected
+  React.useEffect(() => {
+    const checkRefundStatus = async () => {
+      if (!selectedTransaction?.transactionId) return;
+      
+      setIsCheckingRefund(true);
+      try {
+        const result = await airtableService.checkRefundStatus(selectedTransaction.transactionId);
+        if (result.success) {
+          setRefundStatus(result.data);
+        } else {
+          console.error('Error checking refund status:', result.error);
+          // Set default values if check fails
+          setRefundStatus({
+            hasRefundRequest: false,
+            canRequestRefund: true
+          });
+        }
+      } catch (error) {
+        console.error('Error checking refund status:', error);
+        setRefundStatus({
+          hasRefundRequest: false,
+          canRequestRefund: true
+        });
+      } finally {
+        setIsCheckingRefund(false);
+      }
+    };
+
+    checkRefundStatus();
+  }, [selectedTransaction?.transactionId]);
 
   // Get currently selected transaction data
   const selectedTransaction = transactions.find(t => t.transactionId === selectedTransactionId) || transactions[0];
@@ -106,6 +148,23 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
   ];
 
   const handleActionClick = (actionId: string) => {
+    // Check if trying to request refund and it's not allowed
+    if (actionId === 'refund' && refundStatus && !refundStatus.canRequestRefund) {
+      const statusMessage = refundStatus.refundStatus === RefundStatusAirtable.REQUESTED 
+        ? 'A refund request is already pending for this transaction.'
+        : refundStatus.refundStatus === RefundStatusAirtable.APPROVED 
+        ? 'This transaction has already been approved for refund.'
+        : refundStatus.refundStatus === RefundStatusAirtable.PROCESSED 
+        ? 'This transaction has already been processed for refund.'
+        : 'A refund request already exists for this transaction.';
+      
+      setActionResult({ 
+        success: false, 
+        message: statusMessage 
+      });
+      return;
+    }
+
     setSelectedAction(actionId);
     setActionResult(null);
     setShowConfirmation(true);
@@ -158,6 +217,13 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
 
       switch (selectedAction) {
         case 'refund':
+          // First update Airtable with refund request
+          const refundUpdateResult = await airtableService.requestRefund(selectedTransaction.transactionId, userEmail.trim());
+          if (!refundUpdateResult.success) {
+            console.error('Failed to update refund status in Airtable:', refundUpdateResult.error);
+            // Continue with email even if Airtable update fails
+          }
+          
           emailResult = await emailService.sendRefundRequest(emailData);
           successMessage = 'Your refund request has been sent to our support team. You\'ll receive a confirmation email within the next few hours.';
           break;
@@ -450,25 +516,81 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
 
         {/* Action Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
-          {actionCards.map((action, index) => (
-            <Card 
-              key={action.id} 
-              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
-              onClick={() => handleActionClick(action.id)}
-            >
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col items-center text-center space-y-3 sm:space-y-4">
-                  <div className={`h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 rounded-xl ${action.bgColor} flex items-center justify-center`}>
-                    <action.icon className={`h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 ${action.color}`} />
+          {actionCards.map((action, index) => {
+            const isRefundAction = action.id === 'refund';
+            const isDisabled = isRefundAction && refundStatus && !refundStatus.canRequestRefund;
+            const isChecking = isRefundAction && isCheckingRefund;
+            
+            return (
+              <Card 
+                key={action.id} 
+                className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm transition-all duration-200 ${
+                  isDisabled 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : 'hover:shadow-md cursor-pointer'
+                }`}
+                onClick={() => !isDisabled && !isChecking && handleActionClick(action.id)}
+              >
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex flex-col items-center text-center space-y-3 sm:space-y-4">
+                    <div className={`h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 rounded-xl ${action.bgColor} flex items-center justify-center`}>
+                      {isChecking ? (
+                        <div className="animate-spin rounded-full h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 border-2 border-gray-300 border-t-amber-600"></div>
+                      ) : (
+                        <action.icon className={`h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 ${action.color}`} />
+                      )}
+                    </div>
+                    <div className="w-full">
+                      <h3 className="font-semibold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2 text-gray-900 dark:text-gray-100 leading-tight">
+                        {action.title}
+                        {isRefundAction && refundStatus && (
+                          <span className="ml-2">
+                            {refundStatus.refundStatus === RefundStatusAirtable.REQUESTED && (
+                              <Badge className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800 text-xs">
+                                Pending
+                              </Badge>
+                            )}
+                            {refundStatus.refundStatus === RefundStatusAirtable.APPROVED && (
+                              <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800 text-xs">
+                                Approved
+                              </Badge>
+                            )}
+                            {refundStatus.refundStatus === RefundStatusAirtable.REJECTED && (
+                              <Badge className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800 text-xs">
+                                Rejected
+                              </Badge>
+                            )}
+                            {refundStatus.refundStatus === RefundStatusAirtable.PROCESSED && (
+                              <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800 text-xs">
+                                Processed
+                              </Badge>
+                            )}
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                        {isRefundAction && refundStatus && refundStatus.hasRefundRequest ? (
+                          <>
+                            {refundStatus.refundStatus === RefundStatusAirtable.REQUESTED && 'Refund request is pending review.'}
+                            {refundStatus.refundStatus === RefundStatusAirtable.APPROVED && 'Refund has been approved and will be processed.'}
+                            {refundStatus.refundStatus === RefundStatusAirtable.REJECTED && 'Refund was rejected. You can request again if needed.'}
+                            {refundStatus.refundStatus === RefundStatusAirtable.PROCESSED && 'Refund has been processed successfully.'}
+                          </>
+                        ) : (
+                          action.description
+                        )}
+                      </p>
+                      {isRefundAction && refundStatus && refundStatus.refundRequestDate && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Requested: {new Date(refundStatus.refundRequestDate).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="w-full">
-                    <h3 className="font-semibold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2 text-gray-900 dark:text-gray-100 leading-tight">{action.title}</h3>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{action.description}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Confirmation Dialog */}

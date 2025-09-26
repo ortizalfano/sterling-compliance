@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { airtableService } from './airtableService';
 import { emailService } from './emailService';
-import { Transaction, AirtableTransaction } from '../types';
+import { Transaction, AirtableTransaction, RefundStatusAirtable } from '../types';
 
 export interface ChatbotSession {
   id: string;
@@ -368,6 +368,45 @@ Please specify which transaction you'd like to work with by mentioning:
 
     // Check for action requests
     if (lowerMessage.includes('refund') || lowerMessage.includes('money back')) {
+      // Check refund status first
+      const selectedTransaction = state.selectedTransaction || state.foundTransactions?.[0];
+      if (selectedTransaction) {
+        try {
+          const refundStatusResult = await airtableService.checkRefundStatus(selectedTransaction.transactionId);
+          if (refundStatusResult.success && refundStatusResult.data) {
+            const refundStatus = refundStatusResult.data;
+            
+            if (!refundStatus.canRequestRefund) {
+              let statusMessage = '';
+              if (refundStatus.refundStatus === RefundStatusAirtable.REQUESTED) {
+                statusMessage = 'A refund request is already pending for this transaction.';
+              } else if (refundStatus.refundStatus === RefundStatusAirtable.APPROVED) {
+                statusMessage = 'This transaction has already been approved for refund.';
+              } else if (refundStatus.refundStatus === RefundStatusAirtable.PROCESSED) {
+                statusMessage = 'This transaction has already been processed for refund.';
+              } else {
+                statusMessage = 'A refund request already exists for this transaction.';
+              }
+              
+              return {
+                message: `❌ **Refund Request Not Available**
+
+${statusMessage}
+
+${refundStatus.refundRequestDate ? `📅 **Requested on:** ${new Date(refundStatus.refundRequestDate).toLocaleDateString()}` : ''}
+
+What else can I help you with?`,
+                suggestions: ['Cancel subscription', 'Update payment method', 'Check another transaction', 'End conversation'],
+                state: { ...state, step: 'results' }
+              };
+            }
+          }
+        } catch (error) {
+          console.error('Error checking refund status:', error);
+          // Continue with refund request if check fails
+        }
+      }
+      
       // For refunds, collect email first
       return {
         message: `Great! I'll help you with your refund request.
@@ -483,6 +522,14 @@ What would you like to do with this transaction?`,
 
       if (actionType === 'refund') {
         console.log('📧 Sending refund request email...');
+        
+        // First update Airtable with refund request
+        const refundUpdateResult = await airtableService.requestRefund(transaction.transactionId, state.userEmail || '');
+        if (!refundUpdateResult.success) {
+          console.error('Failed to update refund status in Airtable:', refundUpdateResult.error);
+          // Continue with email even if Airtable update fails
+        }
+        
         emailResult = await emailService.sendRefundRequest(emailData);
         actionDescription = 'refund';
       } else if (actionType === 'cancel') {

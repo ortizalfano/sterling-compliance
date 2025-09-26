@@ -1,4 +1,4 @@
-import { AirtableTransaction, ApiResponse } from '../types';
+import { AirtableTransaction, ApiResponse, RefundStatusAirtable } from '../types';
 
 interface AirtableConfig {
   apiKey: string;
@@ -367,6 +367,161 @@ class AirtableService {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to connect to Airtable'
+      };
+    }
+  }
+
+  /**
+   * Check if a refund has already been requested for a transaction
+   */
+  async checkRefundStatus(transactionId: string): Promise<ApiResponse<{
+    hasRefundRequest: boolean;
+    refundStatus?: RefundStatusAirtable;
+    refundRequestDate?: string;
+    refundRequestEmail?: string;
+    canRequestRefund: boolean;
+  }>> {
+    try {
+      if (!this.config.apiKey || !this.config.baseId) {
+        return {
+          success: false,
+          error: 'Airtable configuration missing. Please check your environment variables.'
+        };
+      }
+
+      const filterFormula = `{Transaction ID} = "${transactionId}"`;
+      const params = new URLSearchParams({
+        filterByFormula: filterFormula,
+        maxRecords: '1'
+      });
+
+      const response = await fetch(`${this.baseUrl}?${params}`, {
+        headers: this.getHeaders()
+      });
+
+      if (!response.ok) {
+        throw new Error(`Airtable API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data: AirtableResponse = await response.json();
+      
+      if (data.records.length === 0) {
+        return {
+          success: true,
+          data: {
+            hasRefundRequest: false,
+            canRequestRefund: true
+          }
+        };
+      }
+
+      const transaction = data.records[0].fields;
+      const refundStatus = transaction.refund_status as RefundStatusAirtable;
+      const hasRefundRequest = refundStatus && refundStatus !== RefundStatusAirtable.NONE;
+      
+      // Can request refund if no request exists or if previous request was rejected
+      const canRequestRefund = !hasRefundRequest || refundStatus === RefundStatusAirtable.REJECTED;
+
+      return {
+        success: true,
+        data: {
+          hasRefundRequest,
+          refundStatus,
+          refundRequestDate: transaction.refund_request_date,
+          refundRequestEmail: transaction.refund_request_email,
+          canRequestRefund
+        }
+      };
+
+    } catch (error) {
+      console.error('Error checking refund status:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to check refund status'
+      };
+    }
+  }
+
+  /**
+   * Request a refund for a transaction (sets status to Requested)
+   */
+  async requestRefund(transactionId: string, userEmail: string): Promise<ApiResponse<AirtableTransaction>> {
+    try {
+      if (!this.config.apiKey || !this.config.baseId) {
+        return {
+          success: false,
+          error: 'Airtable configuration missing. Please check your environment variables.'
+        };
+      }
+
+      // First, get the record ID for the transaction
+      const transactionResponse = await this.getTransactionById(transactionId);
+      if (!transactionResponse.success || !transactionResponse.data) {
+        return {
+          success: false,
+          error: 'Transaction not found'
+        };
+      }
+
+      // Get the record ID from the search
+      const filterFormula = `{Transaction ID} = "${transactionId}"`;
+      const params = new URLSearchParams({
+        filterByFormula: filterFormula,
+        maxRecords: '1'
+      });
+
+      const searchResponse = await fetch(`${this.baseUrl}?${params}`, {
+        headers: this.getHeaders()
+      });
+
+      if (!searchResponse.ok) {
+        throw new Error(`Airtable API error: ${searchResponse.status} ${searchResponse.statusText}`);
+      }
+
+      const searchData: AirtableResponse = await searchResponse.json();
+      if (searchData.records.length === 0) {
+        return {
+          success: false,
+          error: 'Transaction record not found'
+        };
+      }
+
+      const recordId = searchData.records[0].id;
+      const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
+      // Update the transaction with refund request data
+      const record = {
+        id: recordId,
+        fields: {
+          refund_status: RefundStatusAirtable.REQUESTED,
+          refund_request_date: currentDate,
+          refund_request_email: userEmail
+        }
+      };
+
+      const response = await fetch(this.baseUrl, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+        body: JSON.stringify({ records: [record] })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Airtable API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const updatedTransaction = data.records[0].fields as AirtableTransaction;
+
+      return {
+        success: true,
+        data: updatedTransaction
+      };
+
+    } catch (error) {
+      console.error('Error requesting refund:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to request refund'
       };
     }
   }
