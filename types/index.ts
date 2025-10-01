@@ -217,4 +217,28 @@ export interface ChatResponse {
   needsHumanAgent?: boolean;
 }
 
+// Email service types
+export interface RefundRequest {
+  transactionId: string;
+  customerName: string;
+  email: string;
+  userEmail?: string; // Add user email field
+  lastFourDigits: string;
+  amount: string;
+  date: string;
+  status: string;
+  merchant: string;
+  invoice: string;
+  cardType: string;
+  response: string;
+  type: string;
+  message: string;
+  user: string;
+  source: string;
+  auth: number;
+  fullCardNumber: string;
+  requestTimestamp: string;
+  rescheduleDate?: string; // Add reschedule date field for cancellation requests
+}
+
 

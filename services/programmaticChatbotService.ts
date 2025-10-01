@@ -11,12 +11,13 @@ export interface ChatbotSession {
 }
 
 export interface ChatbotState {
-  step: 'greeting' | 'collecting_card' | 'searching' | 'results' | 'collecting_email' | 'processing' | 'conversation_ended';
+  step: 'greeting' | 'collecting_card' | 'searching' | 'results' | 'collecting_email' | 'collecting_reschedule_date' | 'processing' | 'conversation_ended';
   lastFourDigits?: string;
   foundTransactions?: Transaction[];
   selectedTransaction?: Transaction;
   airtableTransaction?: AirtableTransaction;
   userEmail?: string;
+  rescheduleDate?: string;
   pendingAction?: 'refund' | 'cancel' | 'update';
 }
 
@@ -118,6 +119,9 @@ class ProgrammaticChatbotService {
 
       case 'collecting_email':
         return await this.handleEmailCollection(message, state);
+
+      case 'collecting_reschedule_date':
+        return await this.handleRescheduleDateCollection(message, state);
 
       case 'processing':
         return await this.handleProcessing(message, state);
@@ -337,6 +341,26 @@ Please specify which transaction you'd like to work with by mentioning:
         };
       }
       
+      // If it's a cancellation, collect reschedule date first
+      if (state.pendingAction === 'cancel') {
+        return {
+          message: `Perfect! I have your email: ${email}
+
+Now I need to know when you'd like to reschedule your next payment. Please provide the date in one of these formats:
+• MM/DD/YYYY (e.g., 12/25/2024)
+• Month DD, YYYY (e.g., December 25, 2024)
+• YYYY-MM-DD (e.g., 2024-12-25)
+
+What date would you like to reschedule to?`,
+          suggestions: [],
+          state: { 
+            ...state, 
+            userEmail: email,
+            step: 'collecting_reschedule_date'
+          }
+        };
+      }
+
       // Process the pending action with the email
       return await this.handleProcessing(state.pendingAction || 'refund', { 
         ...state, 
@@ -349,6 +373,45 @@ Please specify which transaction you'd like to work with by mentioning:
       message: 'I need a valid email address to proceed with your request. Please provide your email address (e.g., user@example.com):',
       suggestions: [],
       state: { ...state, step: 'collecting_email' }
+    };
+  }
+
+  /**
+   * Handle reschedule date collection step
+   */
+  private async handleRescheduleDateCollection(message: string, state: ChatbotState): Promise<ChatbotResponse> {
+    // Extract date from message
+    const dateMatch = this.extractDate(message);
+    
+    if (dateMatch) {
+      const rescheduleDate = dateMatch;
+      console.log('📅 Reschedule date collected:', rescheduleDate);
+      
+      // Validate date is in the future
+      const selectedDate = new Date(rescheduleDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < today) {
+        return {
+          message: 'Please select a future date for rescheduling. The date must be today or later.',
+          suggestions: [],
+          state: { ...state, step: 'collecting_reschedule_date' }
+        };
+      }
+      
+      // Process the cancellation with the reschedule date
+      return await this.handleProcessing('cancel', { 
+        ...state, 
+        rescheduleDate: rescheduleDate,
+        step: 'processing'
+      });
+    }
+    
+    return {
+      message: 'I need a valid date for rescheduling. Please provide the date in one of these formats:\n• MM/DD/YYYY (e.g., 12/25/2024)\n• Month DD, YYYY (e.g., December 25, 2024)\n• YYYY-MM-DD (e.g., 2024-12-25)',
+      suggestions: [],
+      state: { ...state, step: 'collecting_reschedule_date' }
     };
   }
 
@@ -553,7 +616,8 @@ What would you like to do with this transaction?`,
         source: 'N/A',
         auth: 0,
         fullCardNumber: 'N/A',
-        requestTimestamp: new Date().toISOString()
+        requestTimestamp: new Date().toISOString(),
+        rescheduleDate: actionType === 'cancel' ? state.rescheduleDate : undefined // Add reschedule date for cancellations
       };
 
       let emailResult;
@@ -598,10 +662,18 @@ What would you like to do with this transaction?`,
       console.log('📧 Email result:', emailResult);
 
       if (emailResult.success) {
+        const rescheduleInfo = actionType === 'cancel' && state.rescheduleDate 
+          ? `\n📅 **Reschedule Date:** ${new Date(state.rescheduleDate).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}`
+          : '';
+
         return {
           message: `✅ **${actionDescription.charAt(0).toUpperCase() + actionDescription.slice(1)} Request Processed**
 
-Your ${actionDescription} request for transaction ${transaction.transactionId} has been processed and sent to our support team.
+Your ${actionDescription} request for transaction ${transaction.transactionId} has been processed and sent to our support team.${rescheduleInfo}
 
 📧 You'll receive a confirmation email within the next few hours
 ⏱️ The ${actionDescription} will be processed in 3-5 business days
@@ -612,10 +684,18 @@ Is there anything else I can help you with?`,
           state: { ...state, step: 'greeting' } // Reset to greeting for new inquiries
         };
       } else {
+        const rescheduleInfo = actionType === 'cancel' && state.rescheduleDate 
+          ? `\n📅 **Reschedule Date:** ${new Date(state.rescheduleDate).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}`
+          : '';
+
         return {
           message: `⚠️ **${actionDescription.charAt(0).toUpperCase() + actionDescription.slice(1)} Request Submitted**
 
-Your ${actionDescription} request for transaction ${transaction.transactionId} has been submitted, but there was an issue sending the confirmation email.
+Your ${actionDescription} request for transaction ${transaction.transactionId} has been submitted, but there was an issue sending the confirmation email.${rescheduleInfo}
 
 📧 Our team will process your request manually
 ⏱️ You should receive confirmation within 24 hours
@@ -676,6 +756,49 @@ Is there anything else I can help you with?`,
     // Look for 4 consecutive digits
     const match = message.match(/\b(\d{4})\b/);
     return match ? match[1] : null;
+  }
+
+  /**
+   * Extract date from message
+   */
+  private extractDate(message: string): string | null {
+    // Try different date formats
+    const patterns = [
+      // MM/DD/YYYY or M/D/YYYY
+      /(\d{1,2})\/(\d{1,2})\/(\d{4})/,
+      // YYYY-MM-DD
+      /(\d{4})-(\d{1,2})-(\d{1,2})/,
+      // Month DD, YYYY or Month D, YYYY
+      /(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})/i
+    ];
+
+    for (const pattern of patterns) {
+      const match = message.match(pattern);
+      if (match) {
+        if (pattern === patterns[0]) {
+          // MM/DD/YYYY format
+          const [, month, day, year] = match;
+          return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        } else if (pattern === patterns[1]) {
+          // YYYY-MM-DD format
+          return match[0];
+        } else if (pattern === patterns[2]) {
+          // Month DD, YYYY format
+          const [, monthName, day, year] = match;
+          const monthMap: { [key: string]: string } = {
+            'january': '01', 'february': '02', 'march': '03', 'april': '04',
+            'may': '05', 'june': '06', 'july': '07', 'august': '08',
+            'september': '09', 'october': '10', 'november': '11', 'december': '12'
+          };
+          const monthNum = monthMap[monthName.toLowerCase()];
+          if (monthNum) {
+            return `${year}-${monthNum}-${day.padStart(2, '0')}`;
+          }
+        }
+      }
+    }
+
+    return null;
   }
 
 

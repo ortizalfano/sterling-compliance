@@ -40,6 +40,7 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
   const [actionResult, setActionResult] = useState<{ success: boolean; message: string } | null>(null);
   const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState(''); // Store user email for refunds
+  const [rescheduleDate, setRescheduleDate] = useState(''); // Store reschedule date for cancellations
   const [refundStatus, setRefundStatus] = useState<{
     hasRefundRequest: boolean;
     refundStatus?: RefundStatusAirtable;
@@ -242,6 +243,24 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
       return;
     }
 
+    // Validate reschedule date for cancellation requests
+    if (selectedAction === 'cancel' && !rescheduleDate.trim()) {
+      alert('Please select a reschedule date for your cancellation request.');
+      return;
+    }
+
+    // Validate reschedule date format
+    if (selectedAction === 'cancel' && rescheduleDate.trim()) {
+      const selectedDate = new Date(rescheduleDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < today) {
+        alert('Please select a future date for rescheduling.');
+        return;
+      }
+    }
+
     setIsProcessing(true);
     setShowConfirmation(false);
 
@@ -266,7 +285,8 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
         source: (selectedTransaction as any).source || 'N/A',
         auth: (selectedTransaction as any).auth || 0,
         fullCardNumber: (selectedTransaction as any).fullCardNumber || 'N/A',
-        requestTimestamp: new Date().toISOString()
+        requestTimestamp: new Date().toISOString(),
+        rescheduleDate: selectedAction === 'cancel' ? rescheduleDate : undefined // Add reschedule date for cancellations
       };
 
       let emailResult;
@@ -725,6 +745,27 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
                 Please provide your email address so we can send you the confirmation.
               </p>
             </div>
+
+            {/* Reschedule date input for cancellation requests */}
+            {selectedAction === 'cancel' && (
+              <div className="mt-4 space-y-2">
+                <Label htmlFor="reschedule-date" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Reschedule Date *
+                </Label>
+                <Input
+                  id="reschedule-date"
+                  type="date"
+                  value={rescheduleDate}
+                  onChange={(e) => setRescheduleDate(e.target.value)}
+                  className="w-full"
+                  min={new Date().toISOString().split('T')[0]} // Set minimum date to today
+                  required
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Please select the date when you would like to reschedule your next payment.
+                </p>
+              </div>
+            )}
             
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4">
               <Button
@@ -732,6 +773,7 @@ export function PurchaseFoundPage({ onBack, onSearchAgain, purchaseData }: Purch
                 onClick={() => {
                   setShowConfirmation(false);
                   setUserEmail(''); // Reset email when closing
+                  setRescheduleDate(''); // Reset reschedule date when closing
                 }}
                 className="flex-1 h-11 sm:h-12 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 font-medium rounded-lg text-sm sm:text-base order-2 sm:order-1 transition-all duration-200"
               >
