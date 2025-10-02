@@ -96,15 +96,17 @@ export function HomePage({ onNavigateToLookup, onNavigateToHelp }: HomePageProps
                 </p>
                 
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 sm:p-4 md:p-5">
-                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed">
-                    <span className="font-medium text-gray-900 dark:text-gray-100">Common scenarios:</span>
-                    <br />• A partial refund, credit, or discount applied after the original payment was submitted
-                    <br />• Adjustments made to correct an error or reconcile your balance
-                    <br />• A recurring or installment payment processed on a different schedule than expected
-                    <br />• A one-time charge covering multiple outstanding invoices or obligations
-                    <br />• A corrected balance after a previously declined or returned payment was re-processed
-                    <br />• An account adjustment following a dispute, resolution, or settlement
-                  </p>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                    <p className="font-medium text-gray-900 dark:text-gray-100 mb-3">Common scenarios:</p>
+                    <div className="space-y-2">
+                      <div>• A partial refund, credit, or discount applied after the original payment was submitted</div>
+                      <div>• Adjustments made to correct an error or reconcile your balance</div>
+                      <div>• A recurring or installment payment processed on a different schedule than expected</div>
+                      <div>• A one-time charge covering multiple outstanding invoices or obligations</div>
+                      <div>• A corrected balance after a previously declined or returned payment was re-processed</div>
+                      <div>• An account adjustment following a dispute, resolution, or settlement</div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
               
