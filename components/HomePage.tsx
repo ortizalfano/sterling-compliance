@@ -18,7 +18,7 @@ interface HomePageProps {
 export function HomePage({ onNavigateToLookup, onNavigateToHelp }: HomePageProps) {
   const quickActions = [
     { icon: RefreshCw, label: "Request a refund" },
-    { icon: FileText, label: "Cancel/Reschedule subscription" },
+    { icon: FileText, label: "Cancel/Reschedule payment" },
     { icon: Receipt, label: "Request a receipt" },
     { icon: Settings, label: "Update payment details" },
     { icon: HelpCircle, label: "Other issues" },
@@ -34,20 +34,20 @@ export function HomePage({ onNavigateToLookup, onNavigateToHelp }: HomePageProps
               How can we help you today?
             </h1>
             <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto px-2 sm:px-4 md:px-0 leading-relaxed">
-              Fast, secure assistance for purchases processed by Sterling and Associates.
+              Fast, secure assistance for transactions processed by Sterling and Associates.
             </p>
           </div>
 
           {/* Main Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto">
-            {/* Left Card - Recent Purchase Help */}
+            {/* Left Card - Recent Transaction Help */}
             <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 h-full flex flex-col">
               <CardHeader className="p-4 sm:p-5 md:p-6 pb-3 sm:pb-4">
                 <CardTitle className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-start gap-2 sm:gap-3 leading-tight">
                   <div className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 dark:text-amber-400" />
                   </div>
-                  <span className="text-sm sm:text-base md:text-lg">I need help with a recent purchase</span>
+                  <span className="text-sm sm:text-base md:text-lg">I need help with a recent transaction</span>
                 </CardTitle>
               </CardHeader>
               
@@ -71,7 +71,7 @@ export function HomePage({ onNavigateToLookup, onNavigateToHelp }: HomePageProps
                   onClick={onNavigateToLookup}
                   className="w-full bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700 text-white font-medium py-3 sm:py-3.5 md:py-4 px-4 sm:px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 text-sm sm:text-base md:text-lg"
                 >
-                  Look up my purchase
+                  Look up my transaction
                   <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </CardFooter>
