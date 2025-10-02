@@ -90,18 +90,20 @@ export function HomePage({ onNavigateToLookup, onNavigateToHelp }: HomePageProps
               
               <CardContent className="px-4 sm:px-5 md:px-6 pb-3 sm:pb-4 flex-1">
                 <p className="text-gray-600 dark:text-gray-400 mb-4 sm:mb-5 text-sm sm:text-base leading-relaxed">
-                  Sterling and Associates processes payments for various online merchants and subscription services. 
-                  We act as a secure payment processor, which means the charge on your statement might be from 
-                  a purchase you made with one of our partner merchants.
+                  Sterling and Associates securely processes payments for outstanding balances and accounts receivable. 
+                  In some cases, the representative may not have explained that Sterling and Associates would appear 
+                  on your statement. The amount you see may also differ from what you expected due to regular payment adjustments.
                 </p>
                 
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 sm:p-4 md:p-5">
                   <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed">
                     <span className="font-medium text-gray-900 dark:text-gray-100">Common scenarios:</span>
-                    <br />• Online software subscriptions
-                    <br />• Digital content purchases  
-                    <br />• E-commerce transactions
-                    <br />• Recurring service payments
+                    <br />• A partial refund, credit, or discount applied after the original payment was submitted
+                    <br />• Adjustments made to correct an error or reconcile your balance
+                    <br />• A recurring or installment payment processed on a different schedule than expected
+                    <br />• A one-time charge covering multiple outstanding invoices or obligations
+                    <br />• A corrected balance after a previously declined or returned payment was re-processed
+                    <br />• An account adjustment following a dispute, resolution, or settlement
                   </p>
                 </div>
               </CardContent>
