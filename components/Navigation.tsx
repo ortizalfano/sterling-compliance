@@ -1,6 +1,7 @@
 import { Button } from "./ui/button";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Phone } from "lucide-react";
 import { SterlingLogo } from "./SterlingLogo";
+import { ContactDialog } from "./ContactDialog";
 
 interface NavigationProps {
   darkMode: boolean;
@@ -23,7 +24,19 @@ export function Navigation({ darkMode, onToggleDarkMode }: NavigationProps) {
           </div>
 
           {/* Right side controls */}
-          <div className="flex items-center">
+          <div className="flex items-center space-x-2">
+            {/* Contact button */}
+            <ContactDialog>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 border-amber-300 dark:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 text-amber-600 dark:text-amber-400"
+              >
+                <Phone className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Contact</span>
+              </Button>
+            </ContactDialog>
+
             {/* Dark mode toggle */}
             <Button
               variant="outline"
